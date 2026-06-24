@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { IMUNI_SYSTEM_PROMPT } from "@/lib/imuni-system-prompt";
+import { ENVIAR_LEAD_TOOL } from "@/lib/imuni-tools";
+import { sendLeadToWebhook, type LeadPayload } from "@/lib/send-lead-webhook";
 
 export const runtime = "nodejs";
 
@@ -9,6 +11,8 @@ type ChatMessage = {
   content: string;
 };
 
+const MAX_TOOL_ITERATIONS = 3;
+
 function isValidMessage(value: unknown): value is ChatMessage {
   if (typeof value !== "object" || value === null) return false;
   const candidate = value as Record<string, unknown>;
@@ -16,6 +20,12 @@ function isValidMessage(value: unknown): value is ChatMessage {
     (candidate.role === "user" || candidate.role === "assistant") &&
     typeof candidate.content === "string"
   );
+}
+
+function isLeadPayload(value: unknown): value is LeadPayload {
+  if (typeof value !== "object" || value === null) return false;
+  const candidate = value as Record<string, unknown>;
+  return typeof candidate.nome === "string" && typeof candidate.telefone === "string";
 }
 
 export async function POST(request: NextRequest) {
@@ -51,13 +61,57 @@ export async function POST(request: NextRequest) {
 
   try {
     const client = new Anthropic({ apiKey });
+    const conversation: Anthropic.MessageParam[] = [...messages];
 
-    const response = await client.messages.create({
+    let response = await client.messages.create({
       model: "claude-haiku-4-5",
       max_tokens: 1024,
       system: IMUNI_SYSTEM_PROMPT,
-      messages,
+      tools: [ENVIAR_LEAD_TOOL],
+      messages: conversation,
     });
+
+    let iterations = 0;
+
+    while (response.stop_reason === "tool_use" && iterations < MAX_TOOL_ITERATIONS) {
+      iterations += 1;
+
+      const toolUseBlocks = response.content.filter(
+        (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
+      );
+
+      conversation.push({ role: "assistant", content: response.content });
+
+      const toolResults: Anthropic.ToolResultBlockParam[] = [];
+
+      for (const block of toolUseBlocks) {
+        if (block.name === "enviar_lead" && isLeadPayload(block.input)) {
+          await sendLeadToWebhook(block.input);
+          toolResults.push({
+            type: "tool_result",
+            tool_use_id: block.id,
+            content: "Dados recebidos e registrados pela equipe da Imunisinos.",
+          });
+        } else {
+          toolResults.push({
+            type: "tool_result",
+            tool_use_id: block.id,
+            content: "Não foi possível registrar os dados informados.",
+            is_error: true,
+          });
+        }
+      }
+
+      conversation.push({ role: "user", content: toolResults });
+
+      response = await client.messages.create({
+        model: "claude-haiku-4-5",
+        max_tokens: 1024,
+        system: IMUNI_SYSTEM_PROMPT,
+        tools: [ENVIAR_LEAD_TOOL],
+        messages: conversation,
+      });
+    }
 
     const textBlock = response.content.find((block) => block.type === "text");
     const content = textBlock && textBlock.type === "text" ? textBlock.text : "";
