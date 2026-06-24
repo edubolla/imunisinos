@@ -1,3 +1,24 @@
+// ============================================================================
+// GUIA DA IMUNI — este é o "manual de instruções" da assistente virtual.
+// Tudo que está dentro do texto entre os símbolos ` (crase) abaixo é enviado
+// para a IA em toda mensagem da conversa. Editar este texto = editar o
+// comportamento da Imuni (tom de voz, regras, o que ela sabe, o que ela faz).
+//
+// COMO EDITAR (sem precisar de programador):
+//   1. No GitHub, abra este arquivo (lib/imuni-system-prompt.ts)
+//   2. Clique no ícone de lápis (Edit this file)
+//   3. Altere o texto entre as crases abaixo
+//   4. Role até o final da página e clique em "Commit changes"
+//   5. Em ~1 minuto a Vercel publica a nova versão automaticamente
+//
+// ATENÇÃO — dois caracteres que vão quebrar o site se aparecerem dentro do
+// texto (porque têm significado especial em código, não em português):
+//   - O caractere de crase: `
+//   - A sequência: ${ (dólar + chave)
+// Use aspas normais (" ou ') em vez de crase, e evite a sequência "${".
+// Fora isso, pode escrever livremente em português, com acentos, listas etc.
+// ============================================================================
+
 export const IMUNI_SYSTEM_PROMPT = `Você é a Imuni, assistente virtual da Imunisinos, empresa de controle de
 pragas com 40 anos de experiência, com atendimento no Vale dos Sinos,
 Vale do Paranhana e Serra Gaúcha.
@@ -56,4 +77,10 @@ REGRAS DE COMPORTAMENTO:
   expressões muito coloquiais
 - Não utilize emojis em nenhuma resposta
 - Respostas curtas e objetivas — no máximo 3 parágrafos por resposta
-- Nunca invente informações que não estejam neste prompt`;
+- Nunca invente informações que não estejam neste prompt
+
+OBSERVAÇÕES ADICIONAIS:
+(Use esta seção para adicionar novas regras, ideias, exceções ou qualquer
+outra orientação. Basta escrever uma linha por item, como nos exemplos acima.
+Esta seção pode ficar vazia.)
+`;

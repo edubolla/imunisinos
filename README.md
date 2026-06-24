@@ -5,6 +5,36 @@ Sinos, Vale do Paranhana e Serra Gaúcha. Construído com Next.js 14 (App
 Router), TypeScript e Tailwind CSS, com o assistente virtual **Imuni**
 integrado via API da Anthropic (Claude).
 
+## Como editar o que a Imuni fala (sem precisar programar)
+
+Tudo que a Imuni sabe, o tom de voz dela e as regras de comportamento estão
+em **um único arquivo**: [`lib/imuni-system-prompt.ts`](lib/imuni-system-prompt.ts).
+Não existe "treinamento" nem busca em uma base de conhecimento — esse texto
+inteiro é enviado para a IA em toda mensagem da conversa, então qualquer
+edição nele muda o comportamento da Imuni a partir do próximo deploy.
+
+**Para editar sem instalar nada no computador:**
+
+1. Acesse [github.com/edubolla/imunisinos/blob/main/lib/imuni-system-prompt.ts](https://github.com/edubolla/imunisinos/blob/main/lib/imuni-system-prompt.ts)
+2. Clique no ícone de lápis (✏️ **Edit this file**) no canto superior direito
+3. Altere o texto: ajuste tom de voz, adicione regras, novas informações,
+   o que ela pode/não pode falar — tudo em português, livremente. Na seção
+   `OBSERVAÇÕES ADICIONAIS`, no final do arquivo, dá pra só ir acrescentando
+   linhas novas sem se preocupar em entender o resto do arquivo
+4. Role até o fim da página → escreva uma breve descrição da mudança →
+   clique em **Commit changes...** → **Commit changes** (direto na `main`)
+5. Em cerca de 1 minuto a Vercel publica a nova versão automaticamente —
+   é só testar a Imuni de novo no site
+
+**Único cuidado:** não use o caractere de crase (`` ` ``) nem a sequência `${`
+dentro do texto — eles têm significado especial no código e quebram o site.
+O próprio arquivo tem um aviso sobre isso no topo. Fora isso, qualquer texto
+em português é seguro.
+
+Se preferir, também pode simplesmente me dizer em uma frase o que quer mudar
+("quero que ela pare de oferecer desconto", "adiciona que não atendemos
+empresas") e eu edito, faço o commit e o deploy para você.
+
 ## Pré-requisitos
 
 - Node.js 18 ou superior
