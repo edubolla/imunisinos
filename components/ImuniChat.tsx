@@ -1,25 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CONTACT } from "@/lib/constants";
-
-type ChatMessage = {
-  role: "user" | "assistant";
-  content: string;
-};
-
-const QUICK_REPLIES = [
-  "Solicitar orçamento",
-  "Controle de cupins",
-  "Controle de insetos",
-  "Falar com a equipe",
-];
-
-const INITIAL_MESSAGE: ChatMessage = {
-  role: "assistant",
-  content:
-    "Olá! Eu sou a Imuni, assistente virtual da Imunisinos 🐜. Posso te ajudar com dúvidas sobre nossos serviços ou já adiantar seu orçamento. Como posso ajudar?",
-};
+import { IMUNI_QUICK_REPLIES, useImuniChat } from "@/lib/hooks/use-imuni-chat";
 
 function RobotIcon({ className }: { className?: string }) {
   return (
@@ -43,9 +25,8 @@ function ChevronIcon({ className }: { className?: string }) {
 
 export default function ImuniChat() {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
+  const { messages, isLoading, sendMessage } = useImuniChat();
   const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -54,44 +35,10 @@ export default function ImuniChat() {
     }
   }, [messages, isExpanded, isLoading]);
 
-  async function sendMessage(text: string) {
-    const trimmed = text.trim();
-    if (!trimmed || isLoading) return;
-
-    const nextMessages: ChatMessage[] = [...messages, { role: "user", content: trimmed }];
-    setMessages(nextMessages);
-    setInput("");
-    setIsLoading(true);
-
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: nextMessages }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Falha ao obter resposta da Imuni");
-      }
-
-      const data: { content: string } = await response.json();
-      setMessages((current) => [...current, { role: "assistant", content: data.content }]);
-    } catch {
-      setMessages((current) => [
-        ...current,
-        {
-          role: "assistant",
-          content: `Não consegui me conectar agora. Tente novamente em instantes ou fale direto com a nossa equipe pelo telefone/WhatsApp ${CONTACT.phoneDisplay}.`,
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     void sendMessage(input);
+    setInput("");
   }
 
   return (
@@ -150,7 +97,7 @@ export default function ImuniChat() {
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2">
-            {QUICK_REPLIES.map((reply) => (
+            {IMUNI_QUICK_REPLIES.map((reply) => (
               <button
                 key={reply}
                 type="button"

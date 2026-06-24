@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
 import { Comfortaa, Assistant } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import WhatsAppButton from "@/components/WhatsAppButton";
-import ImuniChat from "@/components/ImuniChat";
 import { SITE } from "@/lib/constants";
 
 const comfortaa = Comfortaa({
@@ -37,13 +33,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`${comfortaa.variable} ${assistant.variable} font-body antialiased`}>
-        <div className="sticky top-0 z-50">
-          <ImuniChat />
-          <Header />
-        </div>
-        <main>{children}</main>
-        <Footer />
-        <WhatsAppButton />
+        {children}
       </body>
     </html>
   );

@@ -12,7 +12,7 @@ export default function Header() {
   return (
     <header className="border-b border-black/5 bg-white/95 backdrop-blur">
       <div className="container-page flex h-20 items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-3" onClick={() => setIsMenuOpen(false)}>
+        <Link href="/institucional" className="flex items-center gap-3" onClick={() => setIsMenuOpen(false)}>
           <ImageWithFallback
             src="/images/logo/logo_imunisinos.webp"
             alt="Logo da Imunisinos"

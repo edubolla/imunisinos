@@ -23,7 +23,7 @@ export const SOCIAL = {
 };
 
 export const NAV_LINKS = [
-  { href: "/", label: "Início" },
+  { href: "/institucional", label: "Início" },
   { href: "/a-imunisinos", label: "A Imunisinos" },
   { href: "/servicos", label: "Serviços" },
 ];

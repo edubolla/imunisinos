@@ -1,19 +1,12 @@
-import Hero from "@/components/sections/Hero";
-import ServicesOverview from "@/components/sections/ServicesOverview";
-import Differentials from "@/components/sections/Differentials";
-import CertificationsSection from "@/components/sections/CertificationsSection";
-import TestimonialsSection from "@/components/sections/TestimonialsSection";
-import CTASection from "@/components/sections/CTASection";
+import type { Metadata } from "next";
+import ImuniFullScreenChat from "@/components/ImuniFullScreenChat";
 
-export default function Home() {
-  return (
-    <>
-      <Hero />
-      <ServicesOverview />
-      <Differentials />
-      <CertificationsSection />
-      <TestimonialsSection />
-      <CTASection />
-    </>
-  );
+export const metadata: Metadata = {
+  title: "Fale com a Imuni",
+  description:
+    "Converse agora com a Imuni, assistente virtual da Imunisinos, e tire suas dúvidas sobre controle de pragas, cupins, insetos e roedores.",
+};
+
+export default function ChatPage() {
+  return <ImuniFullScreenChat />;
 }
