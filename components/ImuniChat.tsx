@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import LinkifiedText from "@/components/LinkifiedText";
 import { IMUNI_QUICK_REPLIES, useImuniChat } from "@/lib/hooks/use-imuni-chat";
 
 function RobotIcon({ className }: { className?: string }) {
@@ -83,7 +84,7 @@ export default function ImuniChat() {
                       : "bg-primary-light text-secondary"
                   }`}
                 >
-                  {message.content}
+                  <LinkifiedText text={message.content} />
                 </p>
               </div>
             ))}

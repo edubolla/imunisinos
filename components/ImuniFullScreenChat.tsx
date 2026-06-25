@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import ImageWithFallback from "@/components/ui/ImageWithFallback";
+import LinkifiedText from "@/components/LinkifiedText";
 import { IMUNI_QUICK_REPLIES, useImuniChat } from "@/lib/hooks/use-imuni-chat";
 import { CONTACT } from "@/lib/constants";
 
@@ -62,7 +63,7 @@ export default function ImuniFullScreenChat() {
                       : "bg-white text-secondary shadow-sm"
                   }`}
                 >
-                  {message.content}
+                  <LinkifiedText text={message.content} />
                 </p>
               </div>
             ))}
