@@ -10,7 +10,7 @@ export default function LinkifiedText({ text }: { text: string }) {
           return part;
         }
 
-        const trailingPunctuation = part.match(/[.,;:!?)]+$/)?.[0] ?? "";
+        const trailingPunctuation = part.match(/[.,;:!?)*_\]]+$/)?.[0] ?? "";
         const url = trailingPunctuation ? part.slice(0, -trailingPunctuation.length) : part;
 
         return (
