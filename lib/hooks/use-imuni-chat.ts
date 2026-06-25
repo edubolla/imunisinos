@@ -8,11 +8,20 @@ export type ChatMessage = {
   content: string;
 };
 
-export const IMUNI_QUICK_REPLIES = [
-  "Solicitar orçamento",
-  "Controle de cupins",
-  "Controle de insetos",
-  "Falar com a equipe",
+export type QuickReply = {
+  label: string;
+  message: string;
+};
+
+export const IMUNI_QUICK_REPLIES: QuickReply[] = [
+  { label: "Solicitar orçamento", message: "Quero solicitar um orçamento." },
+  { label: "Controle de Insetos", message: "Tenho interesse no serviço de Controle de Insetos." },
+  { label: "Controle de Cupins", message: "Tenho interesse no serviço de Controle de Cupins." },
+  { label: "Controle de Ratos", message: "Tenho interesse no serviço de Controle de Ratos." },
+  {
+    label: "Outros",
+    message: "Tenho outro tipo de necessidade ou dúvida que não está nas opções acima.",
+  },
 ];
 
 export const IMUNI_INITIAL_MESSAGE: ChatMessage = {

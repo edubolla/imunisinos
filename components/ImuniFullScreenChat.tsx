@@ -80,13 +80,13 @@ export default function ImuniFullScreenChat() {
           <div className="flex flex-wrap gap-2">
             {IMUNI_QUICK_REPLIES.map((reply) => (
               <button
-                key={reply}
+                key={reply.label}
                 type="button"
-                onClick={() => void sendMessage(reply)}
+                onClick={() => void sendMessage(reply.message)}
                 disabled={isLoading}
                 className="rounded-full bg-primary-light px-3 py-1.5 font-body text-xs font-semibold text-primary-dark transition-colors hover:bg-primary/15 disabled:opacity-50"
               >
-                {reply}
+                {reply.label}
               </button>
             ))}
           </div>

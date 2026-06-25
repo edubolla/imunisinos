@@ -99,13 +99,13 @@ export default function ImuniChat() {
           <div className="mt-3 flex flex-wrap gap-2">
             {IMUNI_QUICK_REPLIES.map((reply) => (
               <button
-                key={reply}
+                key={reply.label}
                 type="button"
-                onClick={() => void sendMessage(reply)}
+                onClick={() => void sendMessage(reply.message)}
                 disabled={isLoading}
                 className="rounded-full bg-white/15 px-3 py-1.5 font-body text-xs font-semibold text-white transition-colors hover:bg-white/25 disabled:opacity-50"
               >
-                {reply}
+                {reply.label}
               </button>
             ))}
           </div>
