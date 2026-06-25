@@ -25,7 +25,7 @@ export default function ImuniFullScreenChat() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#85af51] p-3 sm:p-6 lg:p-10">
+    <div className="flex min-h-screen items-center justify-center bg-[#5b6d46] p-3 sm:p-6 lg:p-10">
       <div className="flex h-[88vh] max-h-[760px] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-black/5 bg-white shadow-2xl">
         <header className="flex items-center justify-between gap-4 bg-primary px-4 py-3 text-white sm:px-6">
           <div className="flex items-center gap-3">
