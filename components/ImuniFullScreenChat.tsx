@@ -114,14 +114,20 @@ export default function ImuniFullScreenChat() {
           <p className="mt-3 text-center font-body text-xs text-secondary/50">
             Prefere falar direto?{" "}
             <a
-              href={CONTACT.whatsappUrl}
+              href={CONTACT.whatsappUrlWithMessage(
+                "Olá! Vim do painel da Imuni e gostaria de continuar o atendimento por aqui.",
+              )}
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-primary hover:underline"
             >
               Fale pelo WhatsApp
             </a>{" "}
-            ou ligue {CONTACT.phoneDisplay}.
+            ou ligue{" "}
+            <a href={CONTACT.phoneTel} className="font-semibold text-primary hover:underline">
+              {CONTACT.phoneDisplay}
+            </a>
+            .
           </p>
         </div>
       </div>
