@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import ImageWithFallback from "@/components/ui/ImageWithFallback";
 import LinkifiedText from "@/components/LinkifiedText";
+import WhatsAppLeadButton from "@/components/WhatsAppLeadButton";
 import { IMUNI_QUICK_REPLIES, useImuniChat } from "@/lib/hooks/use-imuni-chat";
 import { CONTACT } from "@/lib/constants";
 
@@ -56,15 +57,18 @@ export default function ImuniFullScreenChat() {
           <div className="flex flex-col gap-3">
             {messages.map((message, index) => (
               <div key={index} className={message.role === "user" ? "flex justify-end" : "flex justify-start"}>
-                <p
-                  className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 font-body text-sm sm:text-base ${
-                    message.role === "user"
-                      ? "bg-primary text-white"
-                      : "bg-white text-secondary shadow-sm"
-                  }`}
-                >
-                  <LinkifiedText text={message.content} />
-                </p>
+                <div className="flex max-w-[85%] flex-col gap-2">
+                  <p
+                    className={`whitespace-pre-wrap rounded-2xl px-4 py-2.5 font-body text-sm sm:text-base ${
+                      message.role === "user"
+                        ? "bg-primary text-white"
+                        : "bg-white text-secondary shadow-sm"
+                    }`}
+                  >
+                    <LinkifiedText text={message.content} />
+                  </p>
+                  {message.whatsappUrl && <WhatsAppLeadButton url={message.whatsappUrl} />}
+                </div>
               </div>
             ))}
             {isLoading && (

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import LinkifiedText from "@/components/LinkifiedText";
+import WhatsAppLeadButton from "@/components/WhatsAppLeadButton";
 import { IMUNI_QUICK_REPLIES, useImuniChat } from "@/lib/hooks/use-imuni-chat";
 
 function RobotIcon({ className }: { className?: string }) {
@@ -77,15 +78,18 @@ export default function ImuniChat() {
           >
             {messages.map((message, index) => (
               <div key={index} className={message.role === "user" ? "flex justify-end" : "flex justify-start"}>
-                <p
-                  className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2 font-body text-sm ${
-                    message.role === "user"
-                      ? "bg-primary text-white"
-                      : "bg-primary-light text-secondary"
-                  }`}
-                >
-                  <LinkifiedText text={message.content} />
-                </p>
+                <div className="flex max-w-[85%] flex-col gap-2">
+                  <p
+                    className={`whitespace-pre-wrap rounded-2xl px-4 py-2 font-body text-sm ${
+                      message.role === "user"
+                        ? "bg-primary text-white"
+                        : "bg-primary-light text-secondary"
+                    }`}
+                  >
+                    <LinkifiedText text={message.content} />
+                  </p>
+                  {message.whatsappUrl && <WhatsAppLeadButton url={message.whatsappUrl} />}
+                </div>
               </div>
             ))}
             {isLoading && (

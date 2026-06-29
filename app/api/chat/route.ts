@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { IMUNI_SYSTEM_PROMPT } from "@/lib/imuni-system-prompt";
 import { ENVIAR_LEAD_TOOL } from "@/lib/imuni-tools";
-import { sendLeadToWebhook, type LeadPayload } from "@/lib/send-lead-webhook";
+import { buildLeadWhatsappUrl, sendLeadToWebhook, type LeadPayload } from "@/lib/send-lead-webhook";
 
 export const runtime = "nodejs";
 
@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
     });
 
     let iterations = 0;
+    let leadWhatsappUrl: string | undefined;
 
     while (response.stop_reason === "tool_use" && iterations < MAX_TOOL_ITERATIONS) {
       iterations += 1;
@@ -87,6 +88,7 @@ export async function POST(request: NextRequest) {
       for (const block of toolUseBlocks) {
         if (block.name === "enviar_lead" && isLeadPayload(block.input)) {
           await sendLeadToWebhook(block.input);
+          leadWhatsappUrl = buildLeadWhatsappUrl(block.input);
           toolResults.push({
             type: "tool_result",
             tool_use_id: block.id,
@@ -116,7 +118,7 @@ export async function POST(request: NextRequest) {
     const textBlock = response.content.find((block) => block.type === "text");
     const content = textBlock && textBlock.type === "text" ? textBlock.text : "";
 
-    return NextResponse.json({ content });
+    return NextResponse.json({ content, leadWhatsappUrl });
   } catch (error) {
     console.error("Erro ao chamar a API da Anthropic:", error);
     return NextResponse.json(

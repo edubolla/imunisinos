@@ -6,6 +6,7 @@ import { CONTACT } from "@/lib/constants";
 export type ChatMessage = {
   role: "user" | "assistant";
   content: string;
+  whatsappUrl?: string;
 };
 
 export type QuickReply = {
@@ -46,15 +47,20 @@ export function useImuniChat() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: nextMessages }),
+        body: JSON.stringify({
+          messages: nextMessages.map(({ role, content }) => ({ role, content })),
+        }),
       });
 
       if (!response.ok) {
         throw new Error("Falha ao obter resposta da Imuni");
       }
 
-      const data: { content: string } = await response.json();
-      setMessages((current) => [...current, { role: "assistant", content: data.content }]);
+      const data: { content: string; leadWhatsappUrl?: string } = await response.json();
+      setMessages((current) => [
+        ...current,
+        { role: "assistant", content: data.content, whatsappUrl: data.leadWhatsappUrl },
+      ]);
     } catch {
       setMessages((current) => [
         ...current,

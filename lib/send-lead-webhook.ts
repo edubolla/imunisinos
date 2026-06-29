@@ -1,3 +1,5 @@
+import { CONTACT } from "@/lib/constants";
+
 export type LeadPayload = {
   nome: string;
   telefone: string;
@@ -5,6 +7,20 @@ export type LeadPayload = {
   cidade?: string;
   mensagem?: string;
 };
+
+export function buildLeadWhatsappUrl(lead: LeadPayload): string {
+  const lines = [
+    "Olá! Acabei de preencher meus dados no chat da Imuni e gostaria de continuar por aqui.",
+    "",
+    `Nome: ${lead.nome}`,
+    `Telefone: ${lead.telefone}`,
+    lead.cidade ? `Cidade: ${lead.cidade}` : null,
+    `Serviço de interesse: ${lead.servico_interesse}`,
+    lead.mensagem ? `Mensagem: ${lead.mensagem}` : null,
+  ].filter((line): line is string => line !== null);
+
+  return CONTACT.whatsappUrlWithMessage(lines.join("\n"));
+}
 
 export async function sendLeadToWebhook(lead: LeadPayload): Promise<{ ok: boolean }> {
   const webhookUrl = process.env.N8N_LEAD_WEBHOOK_URL;
