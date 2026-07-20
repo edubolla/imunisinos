@@ -9,12 +9,12 @@ export const SITE = {
 export const CONTACT = {
   phoneDisplay: "(51) 3524-1049",
   phoneTel: "tel:+555135241049",
-  whatsappNumber: "5551352410490",
+  whatsappNumber: "555135241049",
   get whatsappUrl() {
     return `https://wa.me/${this.whatsappNumber}`;
   },
   whatsappUrlWithMessage: (message: string) =>
-    `https://wa.me/5551352410490?text=${encodeURIComponent(message)}`,
+    `https://wa.me/${CONTACT.whatsappNumber}?text=${encodeURIComponent(message)}`,
 };
 
 export const SOCIAL = {
