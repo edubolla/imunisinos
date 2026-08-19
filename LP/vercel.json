@@ -12,9 +12,9 @@
     }
   ],
   "rewrites": [
-    { "source": "/controle-de-insetos-desinsetizacao", "destination": "/index.html" },
-    { "source": "/controle-de-ratos-desratizacao", "destination": "/ratos.html" },
-    { "source": "/controle-de-cupins-descupinizacao", "destination": "/cupins.html" },
-    { "source": "/controle-integrado-de-pragas-cip", "destination": "/cip.html" }
+    { "source": "/controle-de-insetos-desinsetizacao", "destination": "/insetos" },
+    { "source": "/controle-de-ratos-desratizacao", "destination": "/ratos" },
+    { "source": "/controle-de-cupins-descupinizacao", "destination": "/cupins" },
+    { "source": "/controle-integrado-de-pragas-cip", "destination": "/cip" }
   ]
 }

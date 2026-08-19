@@ -19,5 +19,5 @@ Leia `docs/ADS-CONTINUIDADE.md` no início de qualquer tarefa de Google Ads, lan
 
 - Conta Ads: Imunisinos 2024 `704-609-1201` · MCC EduardoMetinger_MKT `109-769-6801`
 - Campanha no ar: `em_11_pesquisa_serviços` (`21868724583`) · Maximize Conv. · tCPA **R$ 20** · orçamento **R$ 50/dia** · Search Partners **off**
-- LPs: pasta `imunisinos-lp-ads/` — `index.html` (insetos), `ratos.html`, `cupins.html`, `cip.html`. Destino GitHub: `https://github.com/edubolla/lpimunisinos.git`.
+- LPs: pasta `LP/` — `insetos/`, `ratos/`, `cupins/`, `cip/`. Destino GitHub: `https://github.com/edubolla/lpimunisinos.git` (ainda vazio; 403 neste ambiente).
 - Próximo fora do código: preview visual → push `lpimunisinos` se ainda vazio → domínio/FTP depois. RSA Excellent em ~7 dias. WordPress sem acesso.

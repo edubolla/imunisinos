@@ -5,14 +5,14 @@ Atualizado em **19/08/2026** (sessão que fechou as 4 LPs). Ler isto antes de qu
 ## Como retomar
 
 1. Abrir o repo `edubolla/imunisinos` (este).
-2. Se a pasta `imunisinos-lp-ads/` existir, a LP está aqui (backup). Destino oficial: [github.com/edubolla/lpimunisinos](https://github.com/edubolla/lpimunisinos).
-3. Se `lpimunisinos` ainda estiver **vazio**, fazer push da pasta `imunisinos-lp-ads/` no Mac do Edu. Cloud Agents (esta sessão inclusive) tomam **403** `cursor[bot]` nesse repo — o token só escreve em `imunisinos`.
+2. A LP está na pasta **`LP/`** (criada neste ambiente). Destino oficial: [github.com/edubolla/lpimunisinos](https://github.com/edubolla/lpimunisinos).
+3. `lpimunisinos` ainda está **vazio**. Push no Mac do Edu a partir de `LP/`. Cloud Agents tomam **403** `cursor[bot]` nesse repo — o token só escreve em `imunisinos`.
 4. Não criar Cloud Agent no `lpimunisinos` até o `main` ter arquivos, ou então copiar desta pasta.
 
 Push sugerido (no Mac, logado no GitHub do Edu):
 
 ```bash
-cd imunisinos-lp-ads
+cd LP
 git init
 git checkout -b main
 git remote add origin https://github.com/edubolla/lpimunisinos.git
@@ -22,6 +22,13 @@ git push -u origin main
 ```
 
 Na Vercel: projeto **novo** só no `lpimunisinos`, framework Other, sem build. Não mexer no projeto da Imuni.
+
+## GitHub — o que este ambiente conseguiu subir
+
+| Destino | Resultado |
+|---|---|
+| `edubolla/imunisinos` branch `cursor/ads-lp-encerrar-2433` (PR #2) | **Sim.** Backup da pasta `LP/` está neste repo. |
+| `edubolla/lpimunisinos` | **Não.** Repo continua vazio. `git push` retornou **403** (`cursor[bot]` sem write). |
 
 ## Conta Google Ads
 
@@ -95,7 +102,7 @@ LPs atuais dos anúncios: WordPress/Elementor em `imunisinos.com.br/controle-de-
 
 - 4 LPs de Ads, **não** refazer o site. As quatro estão no modelo estático.
 - Stack: HTML + CSS + JS estático (Vercel MVP **novo** → depois FTP `imunisinos.com.br/lp/`).
-- Repo separado: `edubolla/lpimunisinos`. Não Next.js. Backup neste repo: `imunisinos-lp-ads/`.
+- Repo separado: `edubolla/lpimunisinos`. Não Next.js. Backup neste repo: pasta **`LP/`**.
 - Copy: guia da Imuni em `lib/imuni-system-prompt.ts`.
 - Marca: verde `#79bb30`, fontes Comfortaa + Assistant.
 - WhatsApp: só Tintim. GTM `GTM-WVCBR3MV`. Preview Vercel com `noindex`.
@@ -104,15 +111,15 @@ LPs atuais dos anúncios: WordPress/Elementor em `imunisinos.com.br/controle-de-
 
 | Página | Arquivo | Intenção |
 |---|---|---|
-| Controle de insetos | `imunisinos-lp-ads/index.html` | Gel vs líquido; barata/formiga/aranha |
-| Controle de ratos | `imunisinos-lp-ads/ratos.html` | Porta-iscas, 5 dias, assistência 60d |
-| Controle de cupins | `imunisinos-lp-ads/cupins.html` | Madeira/broca vs solo; rainha |
-| CIP | `imunisinos-lp-ads/cip.html` | Programa contínuo, relatórios, 24h |
+| Controle de insetos | `LP/insetos/index.html` | Gel vs líquido; barata/formiga/aranha |
+| Controle de ratos | `LP/ratos/index.html` | Porta-iscas, 5 dias, assistência 60d |
+| Controle de cupins | `LP/cupins/index.html` | Madeira/broca vs solo; rainha |
+| CIP | `LP/cip/index.html` | Programa contínuo, relatórios, 24h |
 
 ## Próximos passos (ordem)
 
-1. Push `imunisinos-lp-ads` → `edubolla/lpimunisinos` se o `main` ainda estiver vazio (Cloud Agent pode tomar 403; aí push no Mac do Edu).
-2. Preview: `python3 -m http.server 4173` na pasta da LP, ou Vercel **nova** só nesse repo. Validar mobile (CTA fixo, Tintim).
+1. Push `LP/` → `edubolla/lpimunisinos` se o `main` ainda estiver vazio (Cloud Agent toma 403; push no Mac do Edu).
+2. Preview: `python3 -m http.server 4173` dentro de `LP/`, ou Vercel **nova** só nesse repo. Validar mobile (CTA fixo, Tintim).
 3. Ajustar copy com o Edu se pedir. **Não** apontar Ads para `*.vercel.app`.
 4. Só então domínio/FTP `imunisinos.com.br/lp/` (sem DNS hoje).
 5. RSA: revisar impressões do Excellent daqui a ~7 dias (`761459846572`). Poor `773077870771` converte — não pausar ainda.
@@ -121,7 +128,7 @@ LPs atuais dos anúncios: WordPress/Elementor em `imunisinos.com.br/controle-de-
 
 ## Arquivos
 
-- LP: `imunisinos-lp-ads/index.html`, `ratos.html`, `cupins.html`, `cip.html`, `css/lp.css`, `js/lp.js`
+- LP: pasta `LP/` (`insetos/`, `ratos/`, `cupins/`, `cip/`, `css/`, `js/`, `images/`)
 - Regra Cursor: `.cursor/rules/imunisinos-ads-continuidade.mdc`
 - Prompt Imuni (copy): `lib/imuni-system-prompt.ts`
 - Diagnóstico visual (máquina local anterior): canvas `google-ads-6m-diagnostico.canvas.tsx` no projeto Cursor local do Edu, se ainda existir

@@ -36,4 +36,4 @@ yarn-error.log*
 next-env.d.ts
 
 # git interno da LP (os arquivos da pasta entram neste repo como backup)
-imunisinos-lp-ads/.git/
+LP/.git/
