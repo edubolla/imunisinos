@@ -2,41 +2,44 @@
 
 Repositório GitHub: [edubolla/lpimunisinos](https://github.com/edubolla/lpimunisinos).  
 **Separado** do site da Imuni (`edubolla/imunisinos` / Vercel atual).  
-HTML + CSS + JS estático: sobe nesta Vercel (projeto novo) e, no futuro, copia para `imunisinos.com.br/lp/` por FTP.
+HTML + CSS + JS estático: sobe nesta Vercel (projeto **novo**) e, no futuro, copia para `imunisinos.com.br/lp/` por FTP.
 
-Continuidade da sessão Ads: `HANDOFF.md` (neste repo) e `docs/ADS-CONTINUIDADE.md` no repo da Imuni.
+Continuidade Ads: `HANDOFF.md` (neste repo) e `docs/ADS-CONTINUIDADE.md` no repo da Imuni.
 
-## MVP
+## Páginas
 
-Uma página-modelo: **Controle de insetos** (`index.html`).
+| Arquivo | Serviço | URL limpa (Vercel) | Rewrite do slug WordPress |
+| --- | --- | --- | --- |
+| `index.html` | Controle de insetos | `/` | `/controle-de-insetos-desinsetizacao` |
+| `ratos.html` | Controle de ratos | `/ratos` | `/controle-de-ratos-desratizacao` |
+| `cupins.html` | Controle de cupins | `/cupins` | `/controle-de-cupins-descupinizacao` |
+| `cip.html` | Controle Integrado de Pragas | `/cip` | `/controle-integrado-de-pragas-cip` |
+
+Todas usam o mesmo Tintim, GTM `GTM-WVCBR3MV`, telefone `(51) 3524-1049` e CSS. Copy baseada no guia da Imuni (`lib/imuni-system-prompt.ts` no repo da Imuni).
 
 - Mobile first, CTA WhatsApp fixo no celular
-- Copy baseada no guia da Imuni (gel vs líquido, isolamento, assistência, certificações)
-- Fotos reais da Imunisinos (logo, equipe, aplicação)
-- WhatsApp pelo **Tintim** (não usar `wa.me` direto — quebra a conversão do Google Ads)
-- GTM `GTM-WVCBR3MV`
+- WhatsApp só pelo **Tintim** (não usar `wa.me` — quebra a conversão `[SITE] WhatsApp`)
+- Preview na Vercel leva `X-Robots-Tag: noindex` (não indexar `*.vercel.app`)
 
 ## Como ver localmente
 
-Abra `index.html` no navegador ou, na pasta:
+Na pasta:
 
 ```bash
 python3 -m http.server 4173
 ```
 
-## Como publicar na Vercel (MVP)
+Abra http://127.0.0.1:4173/ — insetos, `/ratos.html`, `/cupins.html`, `/cip.html`.
 
-1. Importe **este** repositório (não o da Imuni)
+## Como publicar na Vercel (MVP visual)
+
+1. Importe **este** repositório (`lpimunisinos`), não o da Imuni
 2. Framework: **Other** (estático)
 3. Sem comando de build; pasta raiz
-
-## Como duplicar para rato / cupim / CIP
-
-1. Copie `index.html` para `ratos.html` (etc.)
-2. Troque H1, métodos, FAQ e fotos
-3. Mantenha o mesmo link Tintim, GTM, telefone e CSS
+4. **Não** apontar Google Ads para `*.vercel.app`
 
 ## Não fazer neste repo
 
 - Não colocar o chat da Imuni
-- Não apontar anúncio para cá até validar o layout (domínio `vercel.app` piora qualidade da landing no Google)
+- Não trocar Tintim por `wa.me`
+- Não apontar anúncio até a LP estar em `imunisinos.com.br` (DNS/FTP ainda sem acesso)
