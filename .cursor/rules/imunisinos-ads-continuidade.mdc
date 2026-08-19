@@ -1,0 +1,23 @@
+---
+description: Continuidade Ads Imunisinos + LP estática (sessão ago/2026)
+alwaysApply: true
+---
+
+# Ads Imunisinos — continuidade (ago/2026)
+
+Leia `docs/ADS-CONTINUIDADE.md` no início de qualquer tarefa de Google Ads, landing de anúncio ou CPA/WhatsApp da Imunisinos.
+
+## Não fazer
+
+- Não mexer no site da Imuni nem no projeto Vercel existente (`edubolla/imunisinos` em produção).
+- Não usar Next.js nas LPs de Ads (precisa ir para hospedagem compartilhada depois).
+- Não trocar o WhatsApp Tintim por `wa.me` (quebra conversão `[SITE] WhatsApp`).
+- Não pausar o RSA Poor do grupo Controle de Insetos sem 7 dias de dado.
+- Não apontar anúncio para `*.vercel.app` como teste de CPA (só validação visual).
+
+## Estado curto
+
+- Conta Ads: Imunisinos 2024 `704-609-1201` · MCC EduardoMetinger_MKT `109-769-6801`
+- Campanha no ar: `em_11_pesquisa_serviços` (`21868724583`) · Maximize Conv. · tCPA **R$ 20** · orçamento **R$ 50/dia** · Search Partners **off**
+- LP modelo: pasta `imunisinos-lp-ads/` (HTML estático). Destino GitHub: `https://github.com/edubolla/lpimunisinos.git` (ainda precisa de `git push` — o Cloud Agent desta sessão não tem write nesse repo).
+- Próximo: validar visual da LP de insetos → duplicar rato/cupim/CIP → WordPress sem acesso.
