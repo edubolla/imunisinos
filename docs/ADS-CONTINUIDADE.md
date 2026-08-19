@@ -1,34 +1,20 @@
 # Continuidade — Google Ads + LP Imunisinos
 
-Atualizado em **19/08/2026** (sessão que fechou as 4 LPs). Ler isto antes de qualquer tarefa de Ads ou landing.
+Atualizado em **19/08/2026**. Ler isto antes de qualquer tarefa de Ads ou landing.
 
-## Como retomar
+## Como editar e publicar a LP (fluxo certo)
 
-1. Abrir o repo `edubolla/imunisinos` (este).
-2. A LP está na pasta **`LP/`** (criada neste ambiente). Destino oficial: [github.com/edubolla/lpimunisinos](https://github.com/edubolla/lpimunisinos).
-3. `lpimunisinos` ainda está **vazio**. Push no Mac do Edu a partir de `LP/`. Cloud Agents tomam **403** `cursor[bot]` nesse repo — o token só escreve em `imunisinos`.
-4. Não criar Cloud Agent no `lpimunisinos` até o `main` ter arquivos, ou então copiar desta pasta.
+Cloud Agent neste repo (`imunisinos`) **não** consegue commitar no `lpimunisinos` nem publicar na Vercel da LP. Este run está preso a `github.com/edubolla/imunisinos`.
 
-Push sugerido (no Mac, logado no GitHub do Edu):
+Para o Cursor commitar e a Vercel publicar sozinha:
 
-```bash
-cd LP
-git init
-git checkout -b main
-git remote add origin https://github.com/edubolla/lpimunisinos.git
-git add .
-git commit -m "LPs estáticas: insetos, ratos, cupins e CIP"
-git push -u origin main
-```
+1. Liberar o app Cursor no GitHub: [github.com/settings/installations](https://github.com/settings/installations) → **Cursor** → **Configure** → incluir o repo **`lpimunisinos`** (ou “All repositories”) → Save.
+2. Na Vercel: **Add New → Project** → importar **`edubolla/lpimunisinos`** (não o da Imuni) → Framework **Other** → sem build → Deploy.
+3. Pedir as próximas alterações **com o Cursor aberto no repo `lpimunisinos`**, não no da Imuni.
 
-Na Vercel: projeto **novo** só no `lpimunisinos`, framework Other, sem build. Não mexer no projeto da Imuni.
+Backup das LPs neste repo: pasta `LP/`. Oficial: [github.com/edubolla/lpimunisinos](https://github.com/edubolla/lpimunisinos) (`main` já tem arquivos, commit `88837e3`).
 
-## GitHub — o que este ambiente conseguiu subir
-
-| Destino | Resultado |
-|---|---|
-| `edubolla/imunisinos` branch `cursor/ads-lp-encerrar-2433` (PR #2) | **Sim.** Backup da pasta `LP/` está neste repo. |
-| `edubolla/lpimunisinos` | **Não.** Repo continua vazio. `git push` retornou **403** (`cursor[bot]` sem write). |
+Não apontar Google Ads para `*.vercel.app`. Não publicar LP no projeto Vercel da Imuni.
 
 ## Conta Google Ads
 
@@ -118,7 +104,7 @@ LPs atuais dos anúncios: WordPress/Elementor em `imunisinos.com.br/controle-de-
 
 ## Próximos passos (ordem)
 
-1. Push `LP/` → `edubolla/lpimunisinos` se o `main` ainda estiver vazio (Cloud Agent toma 403; push no Mac do Edu).
+1. Editar no repo `lpimunisinos` (Cursor aberto nele) depois de ligar o app Cursor + Vercel novo. Backup aqui: `LP/`.
 2. Preview: `python3 -m http.server 4173` dentro de `LP/`, ou Vercel **nova** só nesse repo. Validar mobile (CTA fixo, Tintim).
 3. Ajustar copy com o Edu se pedir. **Não** apontar Ads para `*.vercel.app`.
 4. Só então domínio/FTP `imunisinos.com.br/lp/` (sem DNS hoje).

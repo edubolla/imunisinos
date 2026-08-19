@@ -1,7 +1,9 @@
 # Landing pages de Ads — Imunisinos
 
 Pasta **`LP/`** neste ambiente (repo `edubolla/imunisinos`, só backup).  
-Destino oficial no GitHub: [edubolla/lpimunisinos](https://github.com/edubolla/lpimunisinos) — **ainda vazio** (push do Cloud Agent toma 403).
+Destino oficial no GitHub: [edubolla/lpimunisinos](https://github.com/edubolla/lpimunisinos) (`main` já publicado).  
+Backup neste repo: pasta `LP/`.  
+Para o Cursor commitar e a Vercel publicar: abrir o projeto **`lpimunisinos`**, não o da Imuni.
 
 HTML + CSS + JS estático. Vercel **nova** (não a da Imuni). Depois: FTP `imunisinos.com.br/lp/`.
 
