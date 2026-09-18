@@ -31,6 +31,23 @@ export const IMUNI_INITIAL_MESSAGE: ChatMessage = {
     "Olá! Sou a Imuni, assistente virtual da Imunisinos. Posso esclarecer dúvidas sobre os nossos serviços ou registrar seus dados para um orçamento. Como posso ajudá-lo?",
 };
 
+function detectCanal(): "widget" | "site" {
+  if (typeof window === "undefined") return "site";
+  return window.location.pathname.startsWith("/widget") ? "widget" : "site";
+}
+
+function detectPagina(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    if (window.self !== window.top && document.referrer) {
+      return document.referrer;
+    }
+  } catch {
+    // iframe cross-origin: document.referrer still carries the parent URL
+  }
+  return document.referrer || window.location.href;
+}
+
 export function useImuniChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([IMUNI_INITIAL_MESSAGE]);
   const [isLoading, setIsLoading] = useState(false);
@@ -49,6 +66,9 @@ export function useImuniChat() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: nextMessages.map(({ role, content }) => ({ role, content })),
+          canal: detectCanal(),
+          pagina: detectPagina(),
+          leadEnviado: nextMessages.some((message) => Boolean(message.whatsappUrl)),
         }),
       });
 

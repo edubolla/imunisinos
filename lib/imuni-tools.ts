@@ -3,7 +3,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 export const ENVIAR_LEAD_TOOL: Anthropic.Tool = {
   name: "enviar_lead",
   description:
-    "Registra os dados de contato de um visitante interessado em orçamento, agendamento ou atendimento, enviando-os para a equipe da Imunisinos. Use somente depois de já ter o nome completo, o telefone/WhatsApp e o serviço de interesse (ou motivo do contato) do visitante. Chame esta ferramenta apenas uma vez por conversa.",
+    "Registra os dados de contato de um visitante interessado em orçamento, agendamento ou atendimento, enviando-os para a equipe da Imunisinos. Chame assim que tiver nome completo, telefone/WhatsApp e o serviço de interesse (ou motivo do contato) — mesmo que ainda faltem detalhes técnicos. Não espere perguntas extras de diagnóstico. Chame apenas uma vez por conversa.",
   input_schema: {
     type: "object",
     properties: {
