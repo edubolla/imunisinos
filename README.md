@@ -83,8 +83,6 @@ configurada em `N8N_LEAD_WEBHOOK_URL`, com o corpo:
   "cidade": "Novo Hamburgo",
   "mensagem": "Notou cupins no madeiramento do telhado",
   "origem": "chat-imuni-site",
-  "canal": "widget",
-  "pagina": "https://imunisinos.com.br/",
   "data_hora": "2026-06-24T19:32:00.000Z"
 }
 ```
@@ -95,17 +93,11 @@ configurada em `N8N_LEAD_WEBHOOK_URL`, com o corpo:
   ou quando não foi possível identificar.
 - `origem` é sempre a string fixa `"chat-imuni-site"` — útil para diferenciar
   de outras fontes de lead, caso o mesmo webhook receba de mais de um lugar.
-- `canal` é `"widget"` quando o chat roda no iframe do site da cliente
-  (`/widget`) e `"site"` nas demais telas da Vercel.
-- `pagina` é a URL da página em que o visitante estava (no widget, o
-  `document.referrer` do iframe, em geral `https://imunisinos.com.br/...`).
 - `data_hora` é o timestamp ISO 8601 de quando o servidor enviou o lead.
 - A ferramenta é acionada **no máximo uma vez por conversa**.
-- O workflow do n8n precisa estar **Active**. Se estiver desligado, o POST
-  na URL de produção responde 404 (`webhook is not registered`) e o lead
-  não entra na automação — isso aparece nos logs da Vercel.
-- O envio é feito uma única vez por requisição (sem retry automático). Se o
-  webhook falhar, a Imuni não confirma cadastro interno e oferece o WhatsApp.
+- O envio é feito uma única vez por requisição (sem retry automático); falhas
+  são apenas registradas no log do servidor (Vercel → Logs), sem interromper
+  a conversa com o visitante.
 
 ## Rodando localmente
 
@@ -141,6 +133,21 @@ placeholder estilizado no lugar, sem quebrar o layout.
    configuração adicional.
 5. Em atualizações futuras, basta fazer push para a branch principal — a
    Vercel publica automaticamente uma nova versão.
+
+## Widget no site da cliente (iframe)
+
+O chat embutido em [imunisinos.com.br](https://imunisinos.com.br) deve carregar
+`https://imunisinos.vercel.app/widget`. No Google Tag Manager, **substitua** o
+HTML customizado inteiro por um único script (não deixe o HTML antigo junto,
+senão o iframe é recriado e a conversa se perde):
+
+```html
+<script src="https://imunisinos.vercel.app/widget-embed.js" data-no-optimize="1"></script>
+```
+
+O `data-no-optimize="1"` evita que o LiteSpeed atrase ou lazy-loade o widget.
+O envio do lead para o n8n continua igual: só dispara quando a Imuni já tiver
+nome, telefone e serviço de interesse.
 
 ## Estrutura do projeto
 
