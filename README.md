@@ -137,15 +137,11 @@ placeholder estilizado no lugar, sem quebrar o layout.
 ## Widget no site da cliente (iframe)
 
 O chat embutido em [imunisinos.com.br](https://imunisinos.com.br) deve carregar
-`https://imunisinos.vercel.app/widget`. No Google Tag Manager, **substitua** o
-HTML customizado inteiro por um único script (não deixe o HTML antigo junto,
-senão o iframe é recriado e a conversa se perde):
+`https://imunisinos.vercel.app/widget`. No Google Tag Manager, cole o HTML
+completo de [`public/gtm-imuni-widget.html`](public/gtm-imuni-widget.html)
+(botão, posição, ícone e balão). Não use só o `widget-embed.js` até esse
+arquivo existir na produção da Vercel.
 
-```html
-<script src="https://imunisinos.vercel.app/widget-embed.js" data-no-optimize="1"></script>
-```
-
-O `data-no-optimize="1"` evita que o LiteSpeed atrase ou lazy-loade o widget.
 O envio do lead para o n8n continua igual: só dispara quando a Imuni já tiver
 nome, telefone e serviço de interesse.
 
