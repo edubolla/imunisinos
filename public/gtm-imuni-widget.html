@@ -103,36 +103,27 @@
 </div>
 
 <div id="imuni-widget-panel">
-  <iframe id="imuni-widget-iframe" title="Imuni Assistente virtual da Imunisinos" data-no-lazy="1" data-no-optimize="1" loading="eager"></iframe>
+  <iframe id="imuni-widget-iframe" title="Imuni Assistente virtual da Imunisinos"></iframe>
 </div>
 
 <script>
 (function () {
-  function keepFirst(selector) {
-    var nodes = document.querySelectorAll(selector);
-    var extras = Array.prototype.slice.call(nodes, 1);
-    extras.forEach(function (node) {
-      if (node.parentNode) node.parentNode.removeChild(node);
-    });
-  }
-  keepFirst("#imuni-widget-container");
-  keepFirst("#imuni-widget-panel");
-
-  if (window.__imuniWidgetInit) return;
-  window.__imuniWidgetInit = true;
+  if (window.imuniWidgetInit) return;
+  window.imuniWidgetInit = true;
 
   var WIDGET_URL = "https://imunisinos.vercel.app/widget";
   var button = document.getElementById("imuni-widget-button");
   var panel = document.getElementById("imuni-widget-panel");
   var iframe = document.getElementById("imuni-widget-iframe");
-  if (!button || !panel || !iframe) return;
-
   var isOpen = false;
-  iframe.src = WIDGET_URL;
+  var loaded = false;
 
   function toggle() {
     isOpen = !isOpen;
-    if (!iframe.src) iframe.src = WIDGET_URL;
+    if (isOpen && !loaded) {
+      iframe.src = WIDGET_URL;
+      loaded = true;
+    }
     panel.style.display = isOpen ? "block" : "none";
     button.className = isOpen ? "is-open" : "";
   }

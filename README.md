@@ -138,9 +138,9 @@ placeholder estilizado no lugar, sem quebrar o layout.
 
 O chat embutido em [imunisinos.com.br](https://imunisinos.com.br) deve carregar
 `https://imunisinos.vercel.app/widget`. No Google Tag Manager, cole o HTML
-completo de [`public/gtm-imuni-widget.html`](public/gtm-imuni-widget.html)
-(botão, posição, ícone e balão). Não use só o `widget-embed.js` até esse
-arquivo existir na produção da Vercel.
+completo de [`public/gtm-imuni-widget.html`](public/gtm-imuni-widget.html).
+Não use atributos `data-*` nem `loading` no iframe: o validador do GTM
+rejeita isso.
 
 O envio do lead para o n8n continua igual: só dispara quando a Imuni já tiver
 nome, telefone e serviço de interesse.
