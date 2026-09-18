@@ -103,22 +103,17 @@
 </div>
 
 <div id="imuni-widget-panel">
-  <iframe
-    id="imuni-widget-iframe"
-    title="Imuni Assistente virtual da Imunisinos"
-    data-no-lazy="1"
-    data-no-optimize="1"
-    loading="eager"
-  ></iframe>
+  <iframe id="imuni-widget-iframe" title="Imuni Assistente virtual da Imunisinos" data-no-lazy="1" data-no-optimize="1" loading="eager"></iframe>
 </div>
 
 <script>
 (function () {
   function keepFirst(selector) {
     var nodes = document.querySelectorAll(selector);
-    for (var i = 1; i < nodes.length; i++) {
-      if (nodes[i].parentNode) nodes[i].parentNode.removeChild(nodes[i]);
-    }
+    var extras = Array.prototype.slice.call(nodes, 1);
+    extras.forEach(function (node) {
+      if (node.parentNode) node.parentNode.removeChild(node);
+    });
   }
   keepFirst("#imuni-widget-container");
   keepFirst("#imuni-widget-panel");
