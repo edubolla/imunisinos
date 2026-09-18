@@ -134,6 +134,19 @@ placeholder estilizado no lugar, sem quebrar o layout.
 5. Em atualizações futuras, basta fazer push para a branch principal — a
    Vercel publica automaticamente uma nova versão.
 
+## Widget no site da cliente (iframe)
+
+O botão flutuante no site da cliente é só a casca (GTM). O lead do n8n
+é disparado pelo chat em `https://imunisinos.vercel.app/widget`.
+
+No GTM, use o HTML de [`public/gtm-imuni-widget.html`](public/gtm-imuni-widget.html):
+é um `<script>` que monta botão, ícone e balão via JavaScript (o validador
+do GTM recusa `data-*` / `loading` no HTML). Se a tag nova falhar, mantenha
+a tag antiga publicada — o visual é o mesmo.
+
+O envio do lead para o n8n continua igual: só dispara quando a Imuni já tiver
+nome, telefone e serviço de interesse.
+
 ## Estrutura do projeto
 
 ```

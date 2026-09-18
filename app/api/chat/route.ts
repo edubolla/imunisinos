@@ -6,10 +6,24 @@ import { buildLeadWhatsappUrl, sendLeadToWebhook, type LeadPayload } from "@/lib
 
 export const runtime = "nodejs";
 
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
 type ChatMessage = {
   role: "user" | "assistant";
   content: string;
 };
+
+function jsonResponse(data: unknown, status = 200) {
+  return NextResponse.json(data, { status, headers: CORS_HEADERS });
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+}
 
 const MAX_TOOL_ITERATIONS = 3;
 
@@ -34,18 +48,18 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Corpo da requisição inválido." }, { status: 400 });
+    return jsonResponse({ error: "Corpo da requisição inválido." }, 400);
   }
 
   const messages = (body as { messages?: unknown } | null)?.messages;
 
   if (!Array.isArray(messages) || messages.length === 0 || !messages.every(isValidMessage)) {
-    return NextResponse.json(
+    return jsonResponse(
       {
         error:
           "O campo 'messages' é obrigatório e deve ser um array de { role, content }, com role 'user' ou 'assistant'.",
       },
-      { status: 400 },
+      400,
     );
   }
 
@@ -53,9 +67,9 @@ export async function POST(request: NextRequest) {
 
   if (!apiKey) {
     console.error("ANTHROPIC_API_KEY não está configurada.");
-    return NextResponse.json(
+    return jsonResponse(
       { error: "Assistente indisponível no momento. Tente novamente mais tarde." },
-      { status: 500 },
+      500,
     );
   }
 
@@ -118,12 +132,12 @@ export async function POST(request: NextRequest) {
     const textBlock = response.content.find((block) => block.type === "text");
     const content = textBlock && textBlock.type === "text" ? textBlock.text : "";
 
-    return NextResponse.json({ content, leadWhatsappUrl });
+    return jsonResponse({ content, leadWhatsappUrl });
   } catch (error) {
     console.error("Erro ao chamar a API da Anthropic:", error);
-    return NextResponse.json(
+    return jsonResponse(
       { error: "Não foi possível obter resposta da Imuni agora. Tente novamente em instantes." },
-      { status: 500 },
+      500,
     );
   }
 }
