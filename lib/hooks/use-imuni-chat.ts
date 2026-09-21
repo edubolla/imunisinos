@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CONTACT } from "@/lib/constants";
+import { trackImuniEvent } from "@/lib/imuni-analytics";
+import { createConversaId, countUserMessages, resolveConversaId } from "@/lib/imuni-lead";
 
 export type ChatMessage = {
   role: "user" | "assistant";
   content: string;
   whatsappUrl?: string;
+  leadCompleto?: boolean;
 };
 
 export type QuickReply = {
@@ -31,35 +34,129 @@ export const IMUNI_INITIAL_MESSAGE: ChatMessage = {
     "Olá! Sou a Imuni, assistente virtual da Imunisinos. Posso esclarecer dúvidas sobre os nossos serviços ou registrar seus dados para um orçamento. Como posso ajudá-lo?",
 };
 
+const WIDGET_STORAGE_KEY = "imuni-widget-messages";
+const CONVERSA_STORAGE_KEY = "imuni-conversa-id";
+const FALLBACK_CHAT_API = "https://imunisinos.vercel.app/api/chat";
+
+function isWidgetPath() {
+  return typeof window !== "undefined" && window.location.pathname.startsWith("/widget");
+}
+
+function isChatMessage(value: unknown): value is ChatMessage {
+  if (typeof value !== "object" || value === null) return false;
+  const candidate = value as Record<string, unknown>;
+  return (
+    (candidate.role === "user" || candidate.role === "assistant") &&
+    typeof candidate.content === "string"
+  );
+}
+
+function readStoredWidgetMessages(): ChatMessage[] | null {
+  if (!isWidgetPath()) return null;
+  try {
+    const raw = sessionStorage.getItem(WIDGET_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0 || !parsed.every(isChatMessage)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function readOrCreateConversaId(): string {
+  if (typeof window === "undefined") return createConversaId();
+  try {
+    const stored = sessionStorage.getItem(CONVERSA_STORAGE_KEY);
+    const id = resolveConversaId(stored);
+    if (stored !== id) sessionStorage.setItem(CONVERSA_STORAGE_KEY, id);
+    return id;
+  } catch {
+    return createConversaId();
+  }
+}
+
+function resolveChatUrl() {
+  if (typeof window === "undefined") return "/api/chat";
+  const origin = window.location.origin;
+  if (origin && origin !== "null") {
+    return `${origin}/api/chat`;
+  }
+  return FALLBACK_CHAT_API;
+}
+
 export function useImuniChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([IMUNI_INITIAL_MESSAGE]);
+  const [conversaId, setConversaId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const stored = readStoredWidgetMessages();
+    if (stored) setMessages(stored);
+    setConversaId(readOrCreateConversaId());
+    setReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!ready || !isWidgetPath()) return;
+    try {
+      sessionStorage.setItem(WIDGET_STORAGE_KEY, JSON.stringify(messages));
+    } catch {
+      // Third-party iframe storage can be blocked; the in-memory conversation still works.
+    }
+  }, [messages, ready]);
 
   async function sendMessage(text: string) {
     const trimmed = text.trim();
-    if (!trimmed || isLoading) return;
+    if (!trimmed || isLoading || !ready || !conversaId) return;
 
     const nextMessages: ChatMessage[] = [...messages, { role: "user", content: trimmed }];
     setMessages(nextMessages);
     setIsLoading(true);
 
+    if (countUserMessages(nextMessages) === 1) {
+      trackImuniEvent("imuni_start");
+    }
+
+    const alreadySentLead = nextMessages.some((message) => Boolean(message.whatsappUrl));
+    const alreadySentComplete = nextMessages.some((message) => message.leadCompleto === true);
+    const body = JSON.stringify({
+      messages: nextMessages.map(({ role, content }) => ({ role, content })),
+      leadEnviado: alreadySentLead,
+      leadCompleto: alreadySentComplete,
+      conversaId,
+    });
+
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch(resolveChatUrl(), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: nextMessages.map(({ role, content }) => ({ role, content })),
-        }),
+        body,
+        cache: "no-store",
+        keepalive: body.length < 60_000,
       });
 
       if (!response.ok) {
         throw new Error("Falha ao obter resposta da Imuni");
       }
 
-      const data: { content: string; leadWhatsappUrl?: string } = await response.json();
+      const data: { content: string; leadWhatsappUrl?: string; leadCompleto?: boolean } =
+        await response.json();
+      if (data.leadWhatsappUrl && !alreadySentLead) {
+        trackImuniEvent("imuni_lead");
+      }
+      if (data.leadCompleto && !alreadySentComplete) {
+        trackImuniEvent("imuni_lead_completo");
+      }
       setMessages((current) => [
         ...current,
-        { role: "assistant", content: data.content, whatsappUrl: data.leadWhatsappUrl },
+        {
+          role: "assistant",
+          content: data.content,
+          whatsappUrl: data.leadWhatsappUrl,
+          leadCompleto: data.leadCompleto === true,
+        },
       ]);
     } catch {
       setMessages((current) => [

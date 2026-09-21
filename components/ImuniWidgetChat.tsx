@@ -25,7 +25,7 @@ export default function ImuniWidgetChat() {
   }
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-white">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-white">
       <header className="flex items-center gap-3 bg-primary px-4 py-3 text-white">
         <ImageWithFallback
           src="/images/logo/logo_imunisinos.webp"

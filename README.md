@@ -70,34 +70,60 @@ npm install
 
 ### Como a Imuni envia os leads (contrato do webhook)
 
-Durante a conversa, quando a Imuni já tiver coletado nome, telefone/WhatsApp e
-o serviço de interesse do visitante, ela aciona uma ferramenta interna
-(`enviar_lead`, definida em `lib/imuni-tools.ts`) que faz um `POST` para a URL
-configurada em `N8N_LEAD_WEBHOOK_URL`, com o corpo:
+Há **dois POSTs** por conversa, quando possível. O n8n deve tratar os dois
+como a **mesma conversa** (chave: `conversa_id`), não como duas pessoas e
+não como o mesmo telefone para sempre:
+
+1. **`etapa: "contato"`** — assim que o visitante informa o telefone, para
+   não perder o contato. `lead_completo` vem `false`.
+2. **`etapa: "comercial"`** — quando já há nome, serviço e o contexto da
+   conversa com a Imuni. É o briefing para o comercial ligar. Sem esse
+   segundo envio, o time só vê nome e telefone e perde o que foi conversado.
+
+Se o telefone chega quando nome e serviço já estão na conversa, os dois
+POSTs saem no mesmo turno. Se a pessoa sair depois só do telefone, fica
+apenas o primeiro POST.
+
+Na planilha, faça *Append or Update* pela coluna `ID Conversa`
+(`conversa_id`). Assim os dois POSTs viram **uma linha**. Se a mesma
+pessoa voltar daqui a meses, o chat gera outro `conversa_id` e nasce
+outra linha — o histórico antigo não some.
+
+O fluxo do n8n está em [`n8n/leads-imuni-bot-v2.json`](n8n/leads-imuni-bot-v2.json).
+Como importar: [`n8n/README.md`](n8n/README.md).
+
+Campos ausentes vão como `"Não informado"`. O POST para
+`N8N_LEAD_WEBHOOK_URL` tem o corpo:
 
 ```json
 {
+  "conversa_id": "3f2a9a1c-c117-46a2-84a1-85fc1aa1c683",
   "nome": "Maria Silva",
   "telefone": "(51) 99999-9999",
   "servico_interesse": "Controle de Cupins",
   "cidade": "Novo Hamburgo",
-  "mensagem": "Notou cupins no madeiramento do telhado",
+  "mensagem": "Notou cupins no madeiramento do telhado\n\n--- Conversa com a Imuni ---\nVisitante: Tenho cupins no telhado\nImuni: ...",
+  "conversa": "Visitante: Tenho cupins no telhado\nImuni: ...",
   "origem": "chat-imuni-site",
+  "lead_completo": true,
+  "etapa": "comercial",
   "data_hora": "2026-06-24T19:32:00.000Z"
 }
 ```
 
-- `nome`, `telefone` e `servico_interesse` são sempre enviados (são obrigatórios
-  para a Imuni acionar a ferramenta).
-- `cidade` e `mensagem` podem vir como `null` quando o visitante não informou
-  ou quando não foi possível identificar.
-- `origem` é sempre a string fixa `"chat-imuni-site"` — útil para diferenciar
-  de outras fontes de lead, caso o mesmo webhook receba de mais de um lugar.
-- `data_hora` é o timestamp ISO 8601 de quando o servidor enviou o lead.
-- A ferramenta é acionada **no máximo uma vez por conversa**.
-- O envio é feito uma única vez por requisição (sem retry automático); falhas
-  são apenas registradas no log do servidor (Vercel → Logs), sem interromper
-  a conversa com o visitante.
+- `conversa_id` identifica a conversa (UUID). Os dois POSTs da mesma
+  sessão usam o mesmo valor.
+- `telefone` é o único campo obrigatório para disparar o webhook.
+- `nome` e `servico_interesse` vão como `"Não informado"` quando ainda não
+  foram coletados.
+- `lead_completo` é `true` só no POST comercial quando nome e serviço
+  realmente vieram na conversa. No POST de contato é sempre `false`.
+- `etapa` é `"contato"` ou `"comercial"`.
+- `mensagem` inclui o briefing e o transcript da conversa, para o comercial
+  não ligar sem contexto.
+- `conversa` é só o transcript (pode ser `null` se estiver vazio).
+- `cidade` pode vir como `null`.
+- `origem` é sempre `"chat-imuni-site"`.
 
 ## Rodando localmente
 
@@ -134,6 +160,32 @@ placeholder estilizado no lugar, sem quebrar o layout.
 5. Em atualizações futuras, basta fazer push para a branch principal — a
    Vercel publica automaticamente uma nova versão.
 
+## Widget no site da cliente (iframe)
+
+O botão flutuante no site da cliente é só a casca (GTM). O lead do n8n
+é disparado pelo chat em `https://imunisinos.vercel.app/widget`.
+
+No GTM, a tag do botão pode continuar a antiga. Para o Google Analytics
+receber os eventos do chat (que roda no iframe da Vercel), publique também
+uma tag Custom HTML com [`public/gtm-imuni-analytics.html`](public/gtm-imuni-analytics.html)
+(All Pages). Eventos no `dataLayer`:
+
+- `imuni_start` — primeira mensagem do visitante
+- `imuni_lead` — primeiro POST ao n8n (`etapa: "contato"`, pode ser só telefone)
+- `imuni_lead_completo` — segundo POST ao n8n (`etapa: "comercial"`, com
+  briefing e conversa para o comercial)
+
+No GA4, crie eventos personalizados com esses nomes (ou marque-os como
+conversão a partir do dataLayer).
+
+O n8n recebe o contato assim que o visitante informa o telefone
+(`etapa: "contato"`, `lead_completo: false`). Quando a conversa já tem
+contexto comercial (nome, serviço e o que foi falado com a Imuni), dispara
+de novo (`etapa: "comercial"`). Na planilha, atualize a mesma linha pelo
+`conversa_id` — não pelo telefone, senão um retorno meses depois apaga o
+histórico. O CRM pode criar o card só no POST de contato, para não
+duplicar o mesmo atendimento.
+
 ## Estrutura do projeto
 
 ```
@@ -147,5 +199,6 @@ lib/constants.ts        Contato, redes sociais e links de navegação
 lib/imuni-system-prompt.ts  System prompt do assistente virtual Imuni
 lib/imuni-tools.ts          Definição da ferramenta enviar_lead (tool use)
 lib/send-lead-webhook.ts    Envio do lead coletado para o webhook do n8n
+n8n/                    Fluxo do n8n (planilha sem linha duplicada)
 public/images/          Pasta para logo, fotos de serviços e da equipe
 ```
