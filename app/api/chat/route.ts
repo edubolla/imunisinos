@@ -6,6 +6,7 @@ import {
   conversationHasPhone,
   conversationReadyForCompleteLead,
   extractPhone,
+  resolveConversaId,
   shouldForceLeadTool,
 } from "@/lib/imuni-lead";
 import {
@@ -51,6 +52,7 @@ function isValidMessage(value: unknown): value is ChatMessage {
 
 async function dispatchLeadWebhooks(options: {
   lead: PreparedLead;
+  conversaId: string;
   alreadySentContato: boolean;
   alreadySentComercial: boolean;
   readyForComercial: boolean;
@@ -60,7 +62,7 @@ async function dispatchLeadWebhooks(options: {
   let whatsappUrl: string | undefined;
 
   if (!sentContato) {
-    await sendLeadToWebhook(options.lead, { etapa: "contato" });
+    await sendLeadToWebhook(options.lead, { etapa: "contato", conversaId: options.conversaId });
     sentContato = true;
     whatsappUrl = buildLeadWhatsappUrl(options.lead);
   }
@@ -69,7 +71,7 @@ async function dispatchLeadWebhooks(options: {
     !sentComercial && (options.lead.lead_completo || options.readyForComercial);
 
   if (shouldSendComercial) {
-    await sendLeadToWebhook(options.lead, { etapa: "comercial" });
+    await sendLeadToWebhook(options.lead, { etapa: "comercial", conversaId: options.conversaId });
     sentComercial = true;
     whatsappUrl = buildLeadWhatsappUrl(options.lead);
   }
@@ -87,7 +89,12 @@ export async function POST(request: NextRequest) {
   }
 
   const payload =
-    (body as { messages?: unknown; leadEnviado?: unknown; leadCompleto?: unknown } | null) ?? {};
+    (body as {
+      messages?: unknown;
+      leadEnviado?: unknown;
+      leadCompleto?: unknown;
+      conversaId?: unknown;
+    } | null) ?? {};
   const messages = payload.messages;
 
   if (!Array.isArray(messages) || messages.length === 0 || !messages.every(isValidMessage)) {
@@ -110,6 +117,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const conversaId = resolveConversaId(payload.conversaId);
   const alreadySentContato = payload.leadEnviado === true;
   const alreadySentComercial = payload.leadCompleto === true;
   const hasPhone = conversationHasPhone(messages);
@@ -155,6 +163,7 @@ export async function POST(request: NextRequest) {
           const prepared = prepareLeadForWebhook(block.input, messages);
           const dispatched = await dispatchLeadWebhooks({
             lead: prepared,
+            conversaId,
             alreadySentContato: sentContato,
             alreadySentComercial: sentComercial,
             readyForComercial,
@@ -197,6 +206,7 @@ export async function POST(request: NextRequest) {
         const prepared = prepareLeadForWebhook(fallbackLead, messages);
         const dispatched = await dispatchLeadWebhooks({
           lead: prepared,
+          conversaId,
           alreadySentContato: sentContato,
           alreadySentComercial: sentComercial,
           readyForComercial,

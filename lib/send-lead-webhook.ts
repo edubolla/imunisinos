@@ -99,7 +99,7 @@ function composeMensagem(resumo: string | undefined, conversa: string): string {
 
 export async function sendLeadToWebhook(
   lead: PreparedLead,
-  options: { etapa: LeadEtapa },
+  options: { etapa: LeadEtapa; conversaId: string },
 ): Promise<{ ok: boolean; lead_completo: boolean }> {
   const webhookUrl = process.env.N8N_LEAD_WEBHOOK_URL;
   const leadCompleto = options.etapa === "comercial" ? lead.lead_completo : false;
@@ -108,6 +108,7 @@ export async function sendLeadToWebhook(
     console.warn("N8N_LEAD_WEBHOOK_URL não configurada — lead não foi enviado:", {
       ...lead,
       etapa: options.etapa,
+      conversa_id: options.conversaId,
     });
     return { ok: false, lead_completo: leadCompleto };
   }
@@ -117,6 +118,7 @@ export async function sendLeadToWebhook(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        conversa_id: options.conversaId,
         nome: lead.nome,
         telefone: lead.telefone,
         servico_interesse: lead.servico_interesse,

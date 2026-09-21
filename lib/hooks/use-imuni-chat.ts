@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { CONTACT } from "@/lib/constants";
 import { trackImuniEvent } from "@/lib/imuni-analytics";
-import { countUserMessages } from "@/lib/imuni-lead";
+import { createConversaId, countUserMessages, resolveConversaId } from "@/lib/imuni-lead";
 
 export type ChatMessage = {
   role: "user" | "assistant";
@@ -35,6 +35,7 @@ export const IMUNI_INITIAL_MESSAGE: ChatMessage = {
 };
 
 const WIDGET_STORAGE_KEY = "imuni-widget-messages";
+const CONVERSA_STORAGE_KEY = "imuni-conversa-id";
 const FALLBACK_CHAT_API = "https://imunisinos.vercel.app/api/chat";
 
 function isWidgetPath() {
@@ -63,6 +64,18 @@ function readStoredWidgetMessages(): ChatMessage[] | null {
   }
 }
 
+function readOrCreateConversaId(): string {
+  if (typeof window === "undefined") return createConversaId();
+  try {
+    const stored = sessionStorage.getItem(CONVERSA_STORAGE_KEY);
+    const id = resolveConversaId(stored);
+    if (stored !== id) sessionStorage.setItem(CONVERSA_STORAGE_KEY, id);
+    return id;
+  } catch {
+    return createConversaId();
+  }
+}
+
 function resolveChatUrl() {
   if (typeof window === "undefined") return "/api/chat";
   const origin = window.location.origin;
@@ -74,12 +87,14 @@ function resolveChatUrl() {
 
 export function useImuniChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([IMUNI_INITIAL_MESSAGE]);
+  const [conversaId, setConversaId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const stored = readStoredWidgetMessages();
     if (stored) setMessages(stored);
+    setConversaId(readOrCreateConversaId());
     setReady(true);
   }, []);
 
@@ -94,7 +109,7 @@ export function useImuniChat() {
 
   async function sendMessage(text: string) {
     const trimmed = text.trim();
-    if (!trimmed || isLoading || !ready) return;
+    if (!trimmed || isLoading || !ready || !conversaId) return;
 
     const nextMessages: ChatMessage[] = [...messages, { role: "user", content: trimmed }];
     setMessages(nextMessages);
@@ -110,6 +125,7 @@ export function useImuniChat() {
       messages: nextMessages.map(({ role, content }) => ({ role, content })),
       leadEnviado: alreadySentLead,
       leadCompleto: alreadySentComplete,
+      conversaId,
     });
 
     try {

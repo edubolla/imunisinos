@@ -1,0 +1,346 @@
+{
+  "name": "[IMUNISINOS] Leads Imuni Bot V2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "leads_imuni",
+        "options": {
+          "responseMode": "lastNode"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [656, 400],
+      "id": "533284de-df4f-4bf6-93ab-dd409a04367b",
+      "name": "Webhook",
+      "webhookId": "2f5c275e-e600-4940-9aae-3befd018d255"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c0a3e15a-1d00-4d63-865f-05aa15d9f9e1",
+              "name": "conversa_id",
+              "value": "={{ $json.body.conversa_id }}",
+              "type": "string"
+            },
+            {
+              "id": "d43d3ca4-92b2-4d63-865f-05aa15d9f9e1",
+              "name": "nome",
+              "value": "={{ $json.body.nome }}",
+              "type": "string"
+            },
+            {
+              "id": "f4bd2613-dd47-4fb1-91e9-9e98deeca35f",
+              "name": "telefone",
+              "value": "={{ (() => {\n  const numero = String($json.body.telefone ?? '').replace(/\\D/g, '');\n  return numero.startsWith('55') && (numero.length === 12 || numero.length === 13)\n    ? numero\n    : `55${numero}`;\n})() }}",
+              "type": "string"
+            },
+            {
+              "id": "ed7526fb-6c3c-427a-b9ed-f1797c425d93",
+              "name": "servico_interesse",
+              "value": "={{ $json.body.servico_interesse }}",
+              "type": "string"
+            },
+            {
+              "id": "610a13d9-219a-4524-9df3-6d7661cadbbe",
+              "name": "cidade",
+              "value": "={{ $json.body.cidade }}",
+              "type": "string"
+            },
+            {
+              "id": "d9a23aea-9074-41f7-9b56-cb9b7b9e2cd5",
+              "name": "mensagem",
+              "value": "={{ $json.body.mensagem }}",
+              "type": "string"
+            },
+            {
+              "id": "1cc160c2-9bc6-42b6-a664-f101a7e869ef",
+              "name": "origem",
+              "value": "={{ $json.body.origem }}",
+              "type": "string"
+            },
+            {
+              "id": "e7a0a000-4d94-91e6-00d9cb2e8f55",
+              "name": "etapa",
+              "value": "={{ $json.body.etapa }}",
+              "type": "string"
+            },
+            {
+              "id": "1eadc0a0-4d94-91e6-00d9cb2e8f55",
+              "name": "lead_completo",
+              "value": "={{ $json.body.lead_completo }}",
+              "type": "boolean"
+            },
+            {
+              "id": "1abcd4ba-6855-4d94-91e6-00d9cb2e8f55",
+              "name": "data_hora",
+              "value": "={{ $json.body.data_hora }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [912, 400],
+      "id": "7e971409-c496-4795-9f3a-00fe17357bdb",
+      "name": "Organizar dados do lead"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a11c0d14-e7a0-4a91-b7f4-41298eeb60a3",
+              "leftValue": "={{ $json.etapa }}",
+              "rightValue": "comercial",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals",
+                "name": "filter.operator.notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1184, 288],
+      "id": "a11c0d14-e7a0-4a91-b7f4-41298eeb60a2",
+      "name": "É o POST de contato?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.eduardometinger.com/webhook/leads/037f2a9a-c117-46a2-84a1-85fc1aa1c683",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.nome }}"
+            },
+            {
+              "name": "phone",
+              "value": "={{ $json.telefone }}"
+            },
+            {
+              "name": "title",
+              "value": "={{ $json.servico_interesse }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1440, 288],
+      "id": "67895d49-a3a8-49a1-b7f4-41298eeb60a2",
+      "name": "Enviar lead para o CRM",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1njRFDTWm56Hc4L7hoIprF4osv5ipJFv2U03KgTdwaX4",
+          "mode": "list",
+          "cachedResultName": "Imunisinos - Cadastros Ebook",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1njRFDTWm56Hc4L7hoIprF4osv5ipJFv2U03KgTdwaX4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1072315880,
+          "mode": "list",
+          "cachedResultName": "Imuni",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1njRFDTWm56Hc4L7hoIprF4osv5ipJFv2U03KgTdwaX4/edit#gid=1072315880"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID Conversa": "={{ $json.conversa_id }}",
+            "Nome": "={{ $json.nome }}",
+            "Telefone": "={{ $json.telefone }}",
+            "Serviço": "={{ $json.servico_interesse }}",
+            "Cidade": "={{ $json.cidade }}",
+            "Mensagem": "={{ $json.mensagem }}",
+            "Etapa": "={{ $json.etapa }}",
+            "Data": "={{ $now.setZone('America/Sao_Paulo').toFormat('dd/LL/yyyy HH:mm') }}"
+          },
+          "matchingColumns": ["ID Conversa"],
+          "schema": [
+            {
+              "id": "ID Conversa",
+              "displayName": "ID Conversa",
+              "required": true,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Data",
+              "displayName": "Data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nome",
+              "displayName": "Nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Telefone",
+              "displayName": "Telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Serviço",
+              "displayName": "Serviço",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Cidade",
+              "displayName": "Cidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Mensagem",
+              "displayName": "Mensagem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Etapa",
+              "displayName": "Etapa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [1184, 528],
+      "id": "b3e409b2-08ff-4189-91aa-127e08a50b31",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "paSDVida0diywwVs",
+          "name": "Sheets - Eduardo Metinger"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Organizar dados do lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Organizar dados do lead": {
+      "main": [
+        [
+          {
+            "node": "É o POST de contato?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "É o POST de contato?": {
+      "main": [
+        [
+          {
+            "node": "Enviar lead para o CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "cd070185-b5a7-4f42-9f4a-aa9fa666dff9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a593ce7bc9a4a66aa14ff00e385e221d3417d312b0f774ef4cd351ce799ca7fa"
+  },
+  "id": "ieeZsZH5ySV6Qksl",
+  "tags": []
+}

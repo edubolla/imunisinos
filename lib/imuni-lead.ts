@@ -3,6 +3,19 @@ export type ChatRoleMessage = {
   content: string;
 };
 
+const CONVERSA_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function createConversaId(): string {
+  return crypto.randomUUID();
+}
+
+export function resolveConversaId(value: unknown): string {
+  if (typeof value === "string" && CONVERSA_ID_RE.test(value.trim())) {
+    return value.trim();
+  }
+  return createConversaId();
+}
+
 const PHONE_RE = /\(?\d{2}\)?[\s.-]?\d{4,5}[\s.-]?\d{4}/;
 const NAME_RE = /^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'.\s-]{0,60}$/;
 const GENERIC_REPLY_RE =

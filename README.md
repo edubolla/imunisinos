@@ -71,7 +71,8 @@ npm install
 ### Como a Imuni envia os leads (contrato do webhook)
 
 Há **dois POSTs** por conversa, quando possível. O n8n deve tratar os dois
-como o **mesmo lead** (chave: `telefone`), não como duas pessoas:
+como a **mesma conversa** (chave: `conversa_id`), não como duas pessoas e
+não como o mesmo telefone para sempre:
 
 1. **`etapa: "contato"`** — assim que o visitante informa o telefone, para
    não perder o contato. `lead_completo` vem `false`.
@@ -83,11 +84,20 @@ Se o telefone chega quando nome e serviço já estão na conversa, os dois
 POSTs saem no mesmo turno. Se a pessoa sair depois só do telefone, fica
 apenas o primeiro POST.
 
+Na planilha, faça *Append or Update* pela coluna `ID Conversa`
+(`conversa_id`). Assim os dois POSTs viram **uma linha**. Se a mesma
+pessoa voltar daqui a meses, o chat gera outro `conversa_id` e nasce
+outra linha — o histórico antigo não some.
+
+O fluxo do n8n está em [`n8n/leads-imuni-bot-v2.json`](n8n/leads-imuni-bot-v2.json).
+Como importar: [`n8n/README.md`](n8n/README.md).
+
 Campos ausentes vão como `"Não informado"`. O POST para
 `N8N_LEAD_WEBHOOK_URL` tem o corpo:
 
 ```json
 {
+  "conversa_id": "3f2a9a1c-c117-46a2-84a1-85fc1aa1c683",
   "nome": "Maria Silva",
   "telefone": "(51) 99999-9999",
   "servico_interesse": "Controle de Cupins",
@@ -101,6 +111,8 @@ Campos ausentes vão como `"Não informado"`. O POST para
 }
 ```
 
+- `conversa_id` identifica a conversa (UUID). Os dois POSTs da mesma
+  sessão usam o mesmo valor.
 - `telefone` é o único campo obrigatório para disparar o webhook.
 - `nome` e `servico_interesse` vão como `"Não informado"` quando ainda não
   foram coletados.
@@ -169,8 +181,10 @@ conversão a partir do dataLayer).
 O n8n recebe o contato assim que o visitante informa o telefone
 (`etapa: "contato"`, `lead_completo: false`). Quando a conversa já tem
 contexto comercial (nome, serviço e o que foi falado com a Imuni), dispara
-de novo (`etapa: "comercial"`). No n8n, atualize o mesmo registro pelo
-telefone — não crie duas pessoas.
+de novo (`etapa: "comercial"`). Na planilha, atualize a mesma linha pelo
+`conversa_id` — não pelo telefone, senão um retorno meses depois apaga o
+histórico. O CRM pode criar o card só no POST de contato, para não
+duplicar o mesmo atendimento.
 
 ## Estrutura do projeto
 
@@ -185,5 +199,6 @@ lib/constants.ts        Contato, redes sociais e links de navegação
 lib/imuni-system-prompt.ts  System prompt do assistente virtual Imuni
 lib/imuni-tools.ts          Definição da ferramenta enviar_lead (tool use)
 lib/send-lead-webhook.ts    Envio do lead coletado para o webhook do n8n
+n8n/                    Fluxo do n8n (planilha sem linha duplicada)
 public/images/          Pasta para logo, fotos de serviços e da equipe
 ```
