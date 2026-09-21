@@ -102,7 +102,7 @@ Campos ausentes vão como `"Não informado"`. O POST para
   "telefone": "(51) 99999-9999",
   "servico_interesse": "Controle de Cupins",
   "cidade": "Novo Hamburgo",
-  "mensagem": "Notou cupins no madeiramento do telhado\n\n--- Conversa com a Imuni ---\nVisitante: Tenho cupins no telhado\nImuni: ...",
+  "mensagem": "Notou cupins no madeiramento do telhado em Campo Bom.",
   "conversa": "Visitante: Tenho cupins no telhado\nImuni: ...",
   "origem": "chat-imuni-site",
   "lead_completo": true,
@@ -119,9 +119,10 @@ Campos ausentes vão como `"Não informado"`. O POST para
 - `lead_completo` é `true` só no POST comercial quando nome e serviço
   realmente vieram na conversa. No POST de contato é sempre `false`.
 - `etapa` é `"contato"` ou `"comercial"`.
-- `mensagem` inclui o briefing e o transcript da conversa, para o comercial
-  não ligar sem contexto.
-- `conversa` é só o transcript (pode ser `null` se estiver vazio).
+- `mensagem` é um resumo curto da solicitação (1 a 3 frases), para a
+  coluna Mensagem da planilha. O diálogo completo vai só em `conversa`.
+- `conversa` é o transcript (pode ser `null` se estiver vazio). Não mapeie
+  esse campo para a coluna Mensagem.
 - `cidade` pode vir como `null`.
 - `origem` é sempre `"chat-imuni-site"`.
 

@@ -69,8 +69,64 @@ export function prepareLeadForWebhook(lead: LeadPayload, messages: ChatRoleMessa
 
   return {
     ...merged,
+    mensagem: buildLeadSummary(merged, messages),
     conversa: formatConversationForLead(messages),
   };
+}
+
+const SUMMARY_MAX_CHARS = 400;
+const TRANSCRIPT_SPLIT_RE = /---\s*Conversa com a Imuni\s*---/i;
+const DIALOGUE_LINE_RE = /^(Visitante|Imuni)\s*:/i;
+
+export function buildLeadSummary(
+  lead: Pick<LeadPayload, "mensagem" | "servico_interesse" | "cidade">,
+  messages: ChatRoleMessage[] = [],
+): string {
+  const fromTool = extractBriefing(lead.mensagem);
+  if (fromTool) return fromTool;
+
+  const parts: string[] = [];
+  if (hasRealLeadValue(lead.servico_interesse)) {
+    parts.push(`Solicitou ${lead.servico_interesse.trim()}.`);
+  }
+  if (hasRealLeadValue(lead.cidade)) {
+    parts.push(`Cidade: ${lead.cidade!.trim()}.`);
+  }
+  const need = extractUserNeed(messages);
+  if (need && !parts.some((part) => part.toLowerCase().includes(need.toLowerCase()))) {
+    parts.push(need);
+  }
+
+  const summary = parts.join(" ").trim();
+  return summary || "Solicitou contato pelo chat da Imuni.";
+}
+
+function extractBriefing(value?: string): string | undefined {
+  if (!hasRealLeadValue(value)) return undefined;
+  const beforeTranscript = value!.split(TRANSCRIPT_SPLIT_RE)[0]?.trim() ?? "";
+  if (!beforeTranscript || looksLikeTranscript(beforeTranscript)) return undefined;
+  return clipSummary(beforeTranscript);
+}
+
+function looksLikeTranscript(text: string): boolean {
+  const dialogueLines = text.split(/\n/).filter((line) => DIALOGUE_LINE_RE.test(line.trim()));
+  return dialogueLines.length >= 2;
+}
+
+function extractUserNeed(messages: ChatRoleMessage[]): string | undefined {
+  const candidates = messages
+    .filter((message) => message.role === "user")
+    .map((message) => message.content.replace(/\s+/g, " ").trim())
+    .filter((text) => text.length >= 16 && !looksLikeTranscript(text) && !/^\+?\d[\d\s().-]{8,}$/.test(text));
+
+  const need = candidates.sort((a, b) => b.length - a.length)[0];
+  if (!need) return undefined;
+  return clipSummary(need.endsWith(".") ? need : `${need}.`);
+}
+
+function clipSummary(text: string): string {
+  if (text.length <= SUMMARY_MAX_CHARS) return text;
+  return `${text.slice(0, SUMMARY_MAX_CHARS - 1).trimEnd()}…`;
 }
 
 export function buildLeadWhatsappUrl(lead: LeadPayload): string {
@@ -85,16 +141,6 @@ export function buildLeadWhatsappUrl(lead: LeadPayload): string {
   ].filter((line): line is string => line !== null);
 
   return CONTACT.whatsappUrlWithMessage(lines.join("\n"));
-}
-
-function composeMensagem(resumo: string | undefined, conversa: string): string {
-  const parts: string[] = [];
-  if (resumo?.trim()) parts.push(resumo.trim());
-  if (conversa.trim()) {
-    parts.push("--- Conversa com a Imuni ---");
-    parts.push(conversa.trim());
-  }
-  return parts.join("\n\n");
 }
 
 export async function sendLeadToWebhook(
@@ -123,7 +169,7 @@ export async function sendLeadToWebhook(
         telefone: lead.telefone,
         servico_interesse: lead.servico_interesse,
         cidade: lead.cidade ?? null,
-        mensagem: composeMensagem(lead.mensagem, lead.conversa),
+        mensagem: lead.mensagem ?? null,
         conversa: lead.conversa || null,
         origem: "chat-imuni-site",
         lead_completo: leadCompleto,
