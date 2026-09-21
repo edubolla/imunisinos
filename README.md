@@ -70,10 +70,10 @@ npm install
 
 ### Como a Imuni envia os leads (contrato do webhook)
 
-Durante a conversa, quando a Imuni já tiver coletado nome, telefone/WhatsApp e
-o serviço de interesse do visitante, ela aciona uma ferramenta interna
-(`enviar_lead`, definida em `lib/imuni-tools.ts`) que faz um `POST` para a URL
-configurada em `N8N_LEAD_WEBHOOK_URL`, com o corpo:
+Durante a conversa, assim que o visitante informar um telefone/WhatsApp, a
+Imuni aciona a ferramenta `enviar_lead` (mesmo que ainda faltem nome ou
+serviço). Campos ausentes vão como `"Não informado"`. O POST para
+`N8N_LEAD_WEBHOOK_URL` tem o corpo:
 
 ```json
 {
@@ -83,21 +83,22 @@ configurada em `N8N_LEAD_WEBHOOK_URL`, com o corpo:
   "cidade": "Novo Hamburgo",
   "mensagem": "Notou cupins no madeiramento do telhado",
   "origem": "chat-imuni-site",
+  "lead_completo": true,
   "data_hora": "2026-06-24T19:32:00.000Z"
 }
 ```
 
-- `nome`, `telefone` e `servico_interesse` são sempre enviados (são obrigatórios
-  para a Imuni acionar a ferramenta).
-- `cidade` e `mensagem` podem vir como `null` quando o visitante não informou
-  ou quando não foi possível identificar.
-- `origem` é sempre a string fixa `"chat-imuni-site"` — útil para diferenciar
-  de outras fontes de lead, caso o mesmo webhook receba de mais de um lugar.
-- `data_hora` é o timestamp ISO 8601 de quando o servidor enviou o lead.
-- A ferramenta é acionada **no máximo uma vez por conversa**.
-- O envio é feito uma única vez por requisição (sem retry automático); falhas
-  são apenas registradas no log do servidor (Vercel → Logs), sem interromper
-  a conversa com o visitante.
+- `telefone` é o único campo obrigatório para disparar o webhook.
+- `nome` e `servico_interesse` vão como `"Não informado"` quando ainda não
+  foram coletados.
+- `lead_completo` é `true` só quando nome e serviço realmente vieram na
+  conversa; `false` indica lead parcial (telefone anotado para não perder
+  o contato).
+- `cidade` e `mensagem` podem vir como `null`.
+- `origem` é sempre `"chat-imuni-site"`.
+- O envio parcial acontece no máximo uma vez por conversa (quando o
+  telefone aparece). Se depois a Imuni obter nome e serviço, ela pode
+  chamar a ferramenta de novo com os dados completos.
 
 ## Rodando localmente
 
@@ -139,13 +140,19 @@ placeholder estilizado no lugar, sem quebrar o layout.
 O botão flutuante no site da cliente é só a casca (GTM). O lead do n8n
 é disparado pelo chat em `https://imunisinos.vercel.app/widget`.
 
-No GTM, use o HTML de [`public/gtm-imuni-widget.html`](public/gtm-imuni-widget.html):
-é um `<script>` que monta botão, ícone e balão via JavaScript (o validador
-do GTM recusa `data-*` / `loading` no HTML). Se a tag nova falhar, mantenha
-a tag antiga publicada — o visual é o mesmo.
+No GTM, a tag do botão pode continuar a antiga. Para o Google Analytics
+receber os eventos do chat (que roda no iframe da Vercel), publique também
+uma tag Custom HTML com [`public/gtm-imuni-analytics.html`](public/gtm-imuni-analytics.html)
+(All Pages). Eventos no `dataLayer`:
 
-O envio do lead para o n8n continua igual: só dispara quando a Imuni já tiver
-nome, telefone e serviço de interesse.
+- `imuni_start` — primeira mensagem do visitante
+- `imuni_lead` — lead enviado ao n8n (pode ser parcial, só com telefone)
+
+No GA4, crie eventos personalizados com esses nomes (ou marque-os como
+conversão a partir do dataLayer).
+
+O lead para o n8n dispara quando o visitante informa o telefone, mesmo que
+nome ou serviço ainda estejam faltando (`lead_completo: false`).
 
 ## Estrutura do projeto
 

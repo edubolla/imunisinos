@@ -70,6 +70,16 @@
         toggle();
       }
     });
+
+    window.addEventListener("message", function (event) {
+      var origin = event.origin || "";
+      var fromVercel =
+        origin === "https://imunisinos.vercel.app" || origin.indexOf(".vercel.app") !== -1;
+      if (!fromVercel) return;
+      if (!event.data || event.data.source !== "imuni" || !event.data.event) return;
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ event: event.data.event });
+    });
   }
 
   if (document.readyState === "loading") {

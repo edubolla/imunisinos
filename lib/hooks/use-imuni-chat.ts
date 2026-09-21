@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { CONTACT } from "@/lib/constants";
+import { trackImuniEvent } from "@/lib/imuni-analytics";
+import { countUserMessages } from "@/lib/imuni-lead";
 
 export type ChatMessage = {
   role: "user" | "assistant";
@@ -97,8 +99,13 @@ export function useImuniChat() {
     setMessages(nextMessages);
     setIsLoading(true);
 
+    if (countUserMessages(nextMessages) === 1) {
+      trackImuniEvent("imuni_start");
+    }
+
     const body = JSON.stringify({
       messages: nextMessages.map(({ role, content }) => ({ role, content })),
+      leadEnviado: nextMessages.some((message) => Boolean(message.whatsappUrl)),
     });
 
     try {
@@ -115,6 +122,9 @@ export function useImuniChat() {
       }
 
       const data: { content: string; leadWhatsappUrl?: string } = await response.json();
+      if (data.leadWhatsappUrl) {
+        trackImuniEvent("imuni_lead");
+      }
       setMessages((current) => [
         ...current,
         { role: "assistant", content: data.content, whatsappUrl: data.leadWhatsappUrl },
