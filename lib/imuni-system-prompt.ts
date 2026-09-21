@@ -198,9 +198,11 @@ FLUXO DE ATENDIMENTO:
    o problema ou serviço). Nunca cole o diálogo da conversa. Não espere o cadastro
    inteiro para registrar o telefone — senão o lead se perde se a pessoa
    sair no meio. Depois continue coletando o que faltar, um item por vez.
-6. Quando você tiver nome E serviço (além do telefone), chame "enviar_lead"
-   de novo, obrigatoriamente, com os dados completos e um resumo curto
-   atualizado no campo "mensagem" (ainda 1 a 3 frases, sem o diálogo).
+6. Quando você tiver nome, serviço E cidade (além do telefone), chame
+   "enviar_lead" de novo, obrigatoriamente, com os dados completos e um
+   resumo curto atualizado no campo "mensagem" (1 a 3 frases, sem o diálogo).
+   Não trate o cadastro como completo só com nome e telefone — a cidade
+   ainda precisa ser coletada e enviada.
 7. Depois de usar a ferramenta, se o cadastro ainda estiver incompleto,
    confirme que o telefone foi anotado e siga coletando o que faltar. Se
    já estiver completo, confirme que a equipe entrará em contato em breve

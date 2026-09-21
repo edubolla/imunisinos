@@ -8,9 +8,11 @@ import {
   extractPhone,
   resolveConversaId,
   shouldForceLeadTool,
+  userJustProvidedCity,
 } from "@/lib/imuni-lead";
 import {
   buildLeadWhatsappUrl,
+  hasRealLeadValue,
   isLeadPayload,
   prepareLeadForWebhook,
   sendLeadToWebhook,
@@ -56,6 +58,7 @@ async function dispatchLeadWebhooks(options: {
   alreadySentContato: boolean;
   alreadySentComercial: boolean;
   readyForComercial: boolean;
+  refreshCity: boolean;
 }): Promise<{ sentContato: boolean; sentComercial: boolean; whatsappUrl?: string }> {
   let sentContato = options.alreadySentContato;
   let sentComercial = options.alreadySentComercial;
@@ -67,8 +70,11 @@ async function dispatchLeadWebhooks(options: {
     whatsappUrl = buildLeadWhatsappUrl(options.lead);
   }
 
+  const hasCity = hasRealLeadValue(options.lead.cidade);
   const shouldSendComercial =
-    !sentComercial && (options.lead.lead_completo || options.readyForComercial);
+    hasCity &&
+    (options.lead.lead_completo || options.readyForComercial || options.refreshCity) &&
+    (!sentComercial || options.refreshCity);
 
   if (shouldSendComercial) {
     await sendLeadToWebhook(options.lead, { etapa: "comercial", conversaId: options.conversaId });
@@ -122,11 +128,13 @@ export async function POST(request: NextRequest) {
   const alreadySentComercial = payload.leadCompleto === true;
   const hasPhone = conversationHasPhone(messages);
   const readyForComercial = conversationReadyForCompleteLead(messages);
+  const refreshCity = userJustProvidedCity(messages);
   const shouldForceLead = shouldForceLeadTool({
     hasPhone,
     leadEnviado: alreadySentContato,
     leadCompleto: alreadySentComercial,
     readyForComercial,
+    userJustProvidedCity: refreshCity,
   });
 
   try {
@@ -167,6 +175,7 @@ export async function POST(request: NextRequest) {
             alreadySentContato: sentContato,
             alreadySentComercial: sentComercial,
             readyForComercial,
+            refreshCity,
           });
           sentContato = dispatched.sentContato;
           sentComercial = dispatched.sentComercial;
@@ -199,7 +208,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (hasPhone && (!sentContato || (!sentComercial && readyForComercial))) {
+    if (hasPhone && (!sentContato || (!sentComercial && readyForComercial) || refreshCity)) {
       const telefone = extractPhone(messages);
       if (telefone) {
         const fallbackLead: LeadPayload = { nome: "", telefone, servico_interesse: "" };
@@ -210,6 +219,7 @@ export async function POST(request: NextRequest) {
           alreadySentContato: sentContato,
           alreadySentComercial: sentComercial,
           readyForComercial,
+          refreshCity,
         });
         sentContato = dispatched.sentContato;
         sentComercial = dispatched.sentComercial;

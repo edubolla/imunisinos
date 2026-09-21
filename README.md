@@ -76,13 +76,14 @@ não como o mesmo telefone para sempre:
 
 1. **`etapa: "contato"`** — assim que o visitante informa o telefone, para
    não perder o contato. `lead_completo` vem `false`.
-2. **`etapa: "comercial"`** — quando já há nome, serviço e o contexto da
-   conversa com a Imuni. É o briefing para o comercial ligar. Sem esse
-   segundo envio, o time só vê nome e telefone e perde o que foi conversado.
+2. **`etapa: "comercial"`** — quando já há nome, serviço **e cidade**.
+   É o briefing para o comercial ligar. Sem esse segundo envio, o time só
+   vê nome e telefone e perde o que foi conversado.
 
-Se o telefone chega quando nome e serviço já estão na conversa, os dois
-POSTs saem no mesmo turno. Se a pessoa sair depois só do telefone, fica
-apenas o primeiro POST.
+O POST de contato sai no telefone, mesmo que a Imuni ainda esteja
+perguntando a cidade. O POST comercial (e o evento `imuni_lead_completo`)
+só saem depois da cidade. Se a pessoa sair só com o telefone, fica apenas
+o primeiro POST.
 
 Na planilha, faça *Append or Update* pela coluna `ID Conversa`
 (`conversa_id`). Assim os dois POSTs viram **uma linha**. Se a mesma
@@ -116,8 +117,8 @@ Campos ausentes vão como `"Não informado"`. O POST para
 - `telefone` é o único campo obrigatório para disparar o webhook.
 - `nome` e `servico_interesse` vão como `"Não informado"` quando ainda não
   foram coletados.
-- `lead_completo` é `true` só no POST comercial quando nome e serviço
-  realmente vieram na conversa. No POST de contato é sempre `false`.
+- `lead_completo` é `true` só no POST comercial quando nome, serviço **e
+  cidade** vieram na conversa. No POST de contato é sempre `false`.
 - `etapa` é `"contato"` ou `"comercial"`.
 - `mensagem` é um resumo curto da solicitação (1 a 3 frases), para a
   coluna Mensagem da planilha. O diálogo completo vai só em `conversa`.
@@ -173,19 +174,18 @@ uma tag Custom HTML com [`public/gtm-imuni-analytics.html`](public/gtm-imuni-ana
 
 - `imuni_start` — primeira mensagem do visitante
 - `imuni_lead` — primeiro POST ao n8n (`etapa: "contato"`, pode ser só telefone)
-- `imuni_lead_completo` — segundo POST ao n8n (`etapa: "comercial"`, com
-  briefing e conversa para o comercial)
+- `imuni_lead_completo` — segundo POST ao n8n (`etapa: "comercial"`),
+  depois de nome, serviço e cidade
 
 No GA4, crie eventos personalizados com esses nomes (ou marque-os como
 conversão a partir do dataLayer).
 
 O n8n recebe o contato assim que o visitante informa o telefone
 (`etapa: "contato"`, `lead_completo: false`). Quando a conversa já tem
-contexto comercial (nome, serviço e o que foi falado com a Imuni), dispara
-de novo (`etapa: "comercial"`). Na planilha, atualize a mesma linha pelo
-`conversa_id` — não pelo telefone, senão um retorno meses depois apaga o
-histórico. O CRM pode criar o card só no POST de contato, para não
-duplicar o mesmo atendimento.
+nome, serviço e cidade, dispara de novo (`etapa: "comercial"`). Na
+planilha, atualize a mesma linha pelo `conversa_id` — não pelo telefone,
+senão um retorno meses depois apaga o histórico. O CRM pode criar o card
+só no POST de contato, para não duplicar o mesmo atendimento.
 
 ## Estrutura do projeto
 

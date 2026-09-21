@@ -69,17 +69,37 @@ export function conversationHasLikelyName(messages: ChatRoleMessage[]): boolean 
   return messages.some((message) => message.role === "user" && isLikelyPersonName(message.content));
 }
 
+export function extractCityFromConversation(messages: ChatRoleMessage[]): string | undefined {
+  for (let i = 1; i < messages.length; i += 1) {
+    const previous = messages[i - 1];
+    const current = messages[i];
+    if (previous.role !== "assistant" || current.role !== "user") continue;
+    if (!assistantAskedForCity(previous.content)) continue;
+    const text = current.content.trim();
+    if (isLikelyCityName(text)) return text;
+  }
+  return undefined;
+}
+
+export function conversationHasCity(messages: ChatRoleMessage[]): boolean {
+  return Boolean(extractCityFromConversation(messages));
+}
+
+export function userJustProvidedCity(messages: ChatRoleMessage[]): boolean {
+  if (messages.length < 2) return false;
+  const last = messages[messages.length - 1];
+  const previous = messages[messages.length - 2];
+  if (last.role !== "user" || previous.role !== "assistant") return false;
+  return assistantAskedForCity(previous.content) && isLikelyCityName(last.content);
+}
+
 export function conversationReadyForCompleteLead(messages: ChatRoleMessage[]): boolean {
-  if (!conversationHasPhone(messages)) return false;
-
-  const hasService = conversationHasService(messages);
-  const hasName = conversationHasLikelyName(messages);
-  if (hasService && hasName) return true;
-
-  const userCount = countUserMessages(messages);
-  if (hasName && userCount >= 3) return true;
-  if (userCount >= 3 && userContextLength(messages) >= 40) return true;
-  return userCount >= 4;
+  return (
+    conversationHasPhone(messages) &&
+    conversationHasService(messages) &&
+    conversationHasLikelyName(messages) &&
+    conversationHasCity(messages)
+  );
 }
 
 export function shouldForceLeadTool(options: {
@@ -87,9 +107,11 @@ export function shouldForceLeadTool(options: {
   leadEnviado: boolean;
   leadCompleto: boolean;
   readyForComercial: boolean;
+  userJustProvidedCity?: boolean;
 }): boolean {
   if (!options.hasPhone) return false;
   if (!options.leadEnviado) return true;
+  if (options.userJustProvidedCity) return true;
   return !options.leadCompleto && options.readyForComercial;
 }
 
@@ -97,22 +119,33 @@ export function extractLeadHints(messages: ChatRoleMessage[]): {
   nome?: string;
   telefone?: string;
   servico?: string;
+  cidade?: string;
 } {
   const telefone = extractPhone(messages) ?? undefined;
   let nome: string | undefined;
   let servico: string | undefined;
+  let previousAssistant = "";
 
   for (const message of messages) {
+    if (message.role === "assistant") {
+      previousAssistant = message.content;
+      continue;
+    }
     if (!servico) {
       const hint = SERVICE_HINTS.find((item) => item.pattern.test(message.content));
       if (hint) servico = hint.label;
     }
-    if (message.role === "user" && isLikelyPersonName(message.content)) {
+    if (
+      !nome &&
+      message.role === "user" &&
+      isLikelyPersonName(message.content) &&
+      !assistantAskedForCity(previousAssistant)
+    ) {
       nome = message.content.trim();
     }
   }
 
-  return { nome, telefone, servico };
+  return { nome, telefone, servico, cidade: extractCityFromConversation(messages) };
 }
 
 export function formatConversationForLead(messages: ChatRoleMessage[]): string {
@@ -136,9 +169,14 @@ function isLikelyPersonName(value: string): boolean {
   return words.length >= 1 && words.length <= 6;
 }
 
-function userContextLength(messages: ChatRoleMessage[]): number {
-  return messages
-    .filter((message) => message.role === "user")
-    .map((message) => message.content.replace(PHONE_RE, "").replace(/\d/g, " ").replace(/\s+/g, " ").trim())
-    .join(" ").length;
+function assistantAskedForCity(content: string): boolean {
+  return /\bcidade\b/i.test(content);
+}
+
+function isLikelyCityName(value: string): boolean {
+  const text = value.trim();
+  if (text.length < 2 || text.length > 60) return false;
+  if (PHONE_RE.test(text) || GENERIC_REPLY_RE.test(text)) return false;
+  if (SERVICE_HINTS.some((hint) => hint.pattern.test(text))) return false;
+  return /^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'.\s-]{1,59}$/.test(text);
 }
