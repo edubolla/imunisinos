@@ -3,7 +3,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 export const ENVIAR_LEAD_TOOL: Anthropic.Tool = {
   name: "enviar_lead",
   description:
-    "Registra o lead para a equipe da Imunisinos. Chame assim que houver telefone/WhatsApp, mesmo que ainda faltem nome, cidade ou serviço (use \"Não informado\"). No campo mensagem, escreva um resumo curto da solicitação (1 a 3 frases): o que a pessoa precisa. Nunca cole o diálogo da conversa. Quando depois você tiver nome E serviço, chame de novo com os dados completos e o mesmo tipo de resumo, só que mais preciso.",
+    "Registra o lead para a equipe da Imunisinos. Chame assim que houver telefone/WhatsApp, mesmo que ainda faltem nome, cidade ou serviço (use \"Não informado\"). No campo mensagem, escreva um resumo curto da solicitação (1 a 3 frases). Nunca cole o diálogo. Quando tiver nome, serviço E cidade, chame de novo com os dados completos — esse segundo envio é o lead completo.",
   input_schema: {
     type: "object",
     properties: {

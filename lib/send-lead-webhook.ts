@@ -51,7 +51,7 @@ export function normalizeLead(value: LeadPayload): LeadPayload & { lead_completo
     servico_interesse: servico,
     cidade,
     mensagem,
-    lead_completo: nome !== UNKNOWN && servico !== UNKNOWN,
+    lead_completo: nome !== UNKNOWN && servico !== UNKNOWN && Boolean(cidade),
   };
 }
 
@@ -63,7 +63,7 @@ export function prepareLeadForWebhook(lead: LeadPayload, messages: ChatRoleMessa
     servico_interesse: hasRealLeadValue(lead.servico_interesse)
       ? lead.servico_interesse
       : hints.servico ?? "",
-    cidade: lead.cidade,
+    cidade: hasRealLeadValue(lead.cidade) ? lead.cidade : hints.cidade,
     mensagem: lead.mensagem,
   });
 
