@@ -18,7 +18,7 @@ número = linha nova.
 | POST | CRM | Planilha |
 | --- | --- | --- |
 | `etapa: "contato"` | cria o lead | cria a linha (`ID Conversa`) |
-| `etapa: "comercial"` | não dispara de novo | atualiza a mesma linha (nome, serviço, conversa) |
+| `etapa: "comercial"` | não dispara de novo | atualiza a mesma linha (nome, serviço, resumo) |
 
 ## Como aplicar
 
