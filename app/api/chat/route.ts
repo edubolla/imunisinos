@@ -2,12 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { IMUNI_SYSTEM_PROMPT } from "@/lib/imuni-system-prompt";
 import { ENVIAR_LEAD_TOOL } from "@/lib/imuni-tools";
-import { conversationHasPhone } from "@/lib/imuni-lead";
+import {
+  conversationHasPhone,
+  conversationReadyForCompleteLead,
+  extractPhone,
+  shouldForceLeadTool,
+} from "@/lib/imuni-lead";
 import {
   buildLeadWhatsappUrl,
   isLeadPayload,
-  normalizeLead,
+  prepareLeadForWebhook,
   sendLeadToWebhook,
+  type LeadPayload,
+  type PreparedLead,
 } from "@/lib/send-lead-webhook";
 
 export const runtime = "nodejs";
@@ -42,6 +49,34 @@ function isValidMessage(value: unknown): value is ChatMessage {
   );
 }
 
+async function dispatchLeadWebhooks(options: {
+  lead: PreparedLead;
+  alreadySentContato: boolean;
+  alreadySentComercial: boolean;
+  readyForComercial: boolean;
+}): Promise<{ sentContato: boolean; sentComercial: boolean; whatsappUrl?: string }> {
+  let sentContato = options.alreadySentContato;
+  let sentComercial = options.alreadySentComercial;
+  let whatsappUrl: string | undefined;
+
+  if (!sentContato) {
+    await sendLeadToWebhook(options.lead, { etapa: "contato" });
+    sentContato = true;
+    whatsappUrl = buildLeadWhatsappUrl(options.lead);
+  }
+
+  const shouldSendComercial =
+    !sentComercial && (options.lead.lead_completo || options.readyForComercial);
+
+  if (shouldSendComercial) {
+    await sendLeadToWebhook(options.lead, { etapa: "comercial" });
+    sentComercial = true;
+    whatsappUrl = buildLeadWhatsappUrl(options.lead);
+  }
+
+  return { sentContato, sentComercial, whatsappUrl };
+}
+
 export async function POST(request: NextRequest) {
   let body: unknown;
 
@@ -51,7 +86,8 @@ export async function POST(request: NextRequest) {
     return jsonResponse({ error: "Corpo da requisição inválido." }, 400);
   }
 
-  const payload = (body as { messages?: unknown; leadEnviado?: unknown } | null) ?? {};
+  const payload =
+    (body as { messages?: unknown; leadEnviado?: unknown; leadCompleto?: unknown } | null) ?? {};
   const messages = payload.messages;
 
   if (!Array.isArray(messages) || messages.length === 0 || !messages.every(isValidMessage)) {
@@ -74,7 +110,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const shouldForceLead = conversationHasPhone(messages) && payload.leadEnviado !== true;
+  const alreadySentContato = payload.leadEnviado === true;
+  const alreadySentComercial = payload.leadCompleto === true;
+  const hasPhone = conversationHasPhone(messages);
+  const readyForComercial = conversationReadyForCompleteLead(messages);
+  const shouldForceLead = shouldForceLeadTool({
+    hasPhone,
+    leadEnviado: alreadySentContato,
+    leadCompleto: alreadySentComercial,
+    readyForComercial,
+  });
 
   try {
     const client = new Anthropic({ apiKey });
@@ -91,7 +136,8 @@ export async function POST(request: NextRequest) {
 
     let iterations = 0;
     let leadWhatsappUrl: string | undefined;
-    let leadCompleto = false;
+    let sentContato = alreadySentContato;
+    let sentComercial = alreadySentComercial;
 
     while (response.stop_reason === "tool_use" && iterations < MAX_TOOL_ITERATIONS) {
       iterations += 1;
@@ -106,15 +152,21 @@ export async function POST(request: NextRequest) {
 
       for (const block of toolUseBlocks) {
         if (block.name === "enviar_lead" && isLeadPayload(block.input)) {
-          const normalized = normalizeLead(block.input);
-          await sendLeadToWebhook(normalized);
-          leadWhatsappUrl = buildLeadWhatsappUrl(normalized);
-          leadCompleto = normalized.lead_completo;
+          const prepared = prepareLeadForWebhook(block.input, messages);
+          const dispatched = await dispatchLeadWebhooks({
+            lead: prepared,
+            alreadySentContato: sentContato,
+            alreadySentComercial: sentComercial,
+            readyForComercial,
+          });
+          sentContato = dispatched.sentContato;
+          sentComercial = dispatched.sentComercial;
+          if (dispatched.whatsappUrl) leadWhatsappUrl = dispatched.whatsappUrl;
           toolResults.push({
             type: "tool_result",
             tool_use_id: block.id,
-            content: normalized.lead_completo
-              ? "Dados recebidos e registrados pela equipe da Imunisinos."
+            content: sentComercial
+              ? "Dados e contexto da conversa registrados para o comercial da Imunisinos."
               : "Telefone registrado. Continue coletando nome e serviço se ainda faltarem. Confirme que o número foi anotado, sem encerrar a conversa.",
           });
         } else {
@@ -138,10 +190,31 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    if (hasPhone && (!sentContato || (!sentComercial && readyForComercial))) {
+      const telefone = extractPhone(messages);
+      if (telefone) {
+        const fallbackLead: LeadPayload = { nome: "", telefone, servico_interesse: "" };
+        const prepared = prepareLeadForWebhook(fallbackLead, messages);
+        const dispatched = await dispatchLeadWebhooks({
+          lead: prepared,
+          alreadySentContato: sentContato,
+          alreadySentComercial: sentComercial,
+          readyForComercial,
+        });
+        sentContato = dispatched.sentContato;
+        sentComercial = dispatched.sentComercial;
+        if (dispatched.whatsappUrl) leadWhatsappUrl = dispatched.whatsappUrl;
+      }
+    }
+
     const textBlock = response.content.find((block) => block.type === "text");
     const content = textBlock && textBlock.type === "text" ? textBlock.text : "";
 
-    return jsonResponse({ content, leadWhatsappUrl, leadCompleto });
+    return jsonResponse({
+      content,
+      leadWhatsappUrl,
+      leadCompleto: sentComercial,
+    });
   } catch (error) {
     console.error("Erro ao chamar a API da Anthropic:", error);
     return jsonResponse(

@@ -70,9 +70,20 @@ npm install
 
 ### Como a Imuni envia os leads (contrato do webhook)
 
-Durante a conversa, assim que o visitante informar um telefone/WhatsApp, a
-Imuni aciona a ferramenta `enviar_lead` (mesmo que ainda faltem nome ou
-serviço). Campos ausentes vão como `"Não informado"`. O POST para
+Há **dois POSTs** por conversa, quando possível. O n8n deve tratar os dois
+como o **mesmo lead** (chave: `telefone`), não como duas pessoas:
+
+1. **`etapa: "contato"`** — assim que o visitante informa o telefone, para
+   não perder o contato. `lead_completo` vem `false`.
+2. **`etapa: "comercial"`** — quando já há nome, serviço e o contexto da
+   conversa com a Imuni. É o briefing para o comercial ligar. Sem esse
+   segundo envio, o time só vê nome e telefone e perde o que foi conversado.
+
+Se o telefone chega quando nome e serviço já estão na conversa, os dois
+POSTs saem no mesmo turno. Se a pessoa sair depois só do telefone, fica
+apenas o primeiro POST.
+
+Campos ausentes vão como `"Não informado"`. O POST para
 `N8N_LEAD_WEBHOOK_URL` tem o corpo:
 
 ```json
@@ -81,9 +92,11 @@ serviço). Campos ausentes vão como `"Não informado"`. O POST para
   "telefone": "(51) 99999-9999",
   "servico_interesse": "Controle de Cupins",
   "cidade": "Novo Hamburgo",
-  "mensagem": "Notou cupins no madeiramento do telhado",
+  "mensagem": "Notou cupins no madeiramento do telhado\n\n--- Conversa com a Imuni ---\nVisitante: Tenho cupins no telhado\nImuni: ...",
+  "conversa": "Visitante: Tenho cupins no telhado\nImuni: ...",
   "origem": "chat-imuni-site",
   "lead_completo": true,
+  "etapa": "comercial",
   "data_hora": "2026-06-24T19:32:00.000Z"
 }
 ```
@@ -91,14 +104,14 @@ serviço). Campos ausentes vão como `"Não informado"`. O POST para
 - `telefone` é o único campo obrigatório para disparar o webhook.
 - `nome` e `servico_interesse` vão como `"Não informado"` quando ainda não
   foram coletados.
-- `lead_completo` é `true` só quando nome e serviço realmente vieram na
-  conversa; `false` indica lead parcial (telefone anotado para não perder
-  o contato).
-- `cidade` e `mensagem` podem vir como `null`.
+- `lead_completo` é `true` só no POST comercial quando nome e serviço
+  realmente vieram na conversa. No POST de contato é sempre `false`.
+- `etapa` é `"contato"` ou `"comercial"`.
+- `mensagem` inclui o briefing e o transcript da conversa, para o comercial
+  não ligar sem contexto.
+- `conversa` é só o transcript (pode ser `null` se estiver vazio).
+- `cidade` pode vir como `null`.
 - `origem` é sempre `"chat-imuni-site"`.
-- O envio parcial acontece no máximo uma vez por conversa (quando o
-  telefone aparece). Se depois a Imuni obter nome e serviço, ela pode
-  chamar a ferramenta de novo com os dados completos.
 
 ## Rodando localmente
 
@@ -146,13 +159,18 @@ uma tag Custom HTML com [`public/gtm-imuni-analytics.html`](public/gtm-imuni-ana
 (All Pages). Eventos no `dataLayer`:
 
 - `imuni_start` — primeira mensagem do visitante
-- `imuni_lead` — lead enviado ao n8n (pode ser parcial, só com telefone)
+- `imuni_lead` — primeiro POST ao n8n (`etapa: "contato"`, pode ser só telefone)
+- `imuni_lead_completo` — segundo POST ao n8n (`etapa: "comercial"`, com
+  briefing e conversa para o comercial)
 
 No GA4, crie eventos personalizados com esses nomes (ou marque-os como
 conversão a partir do dataLayer).
 
-O lead para o n8n dispara quando o visitante informa o telefone, mesmo que
-nome ou serviço ainda estejam faltando (`lead_completo: false`).
+O n8n recebe o contato assim que o visitante informa o telefone
+(`etapa: "contato"`, `lead_completo: false`). Quando a conversa já tem
+contexto comercial (nome, serviço e o que foi falado com a Imuni), dispara
+de novo (`etapa: "comercial"`). No n8n, atualize o mesmo registro pelo
+telefone — não crie duas pessoas.
 
 ## Estrutura do projeto
 

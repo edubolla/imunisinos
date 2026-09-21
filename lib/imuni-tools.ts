@@ -3,7 +3,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 export const ENVIAR_LEAD_TOOL: Anthropic.Tool = {
   name: "enviar_lead",
   description:
-    "Registra os dados de contato de um visitante para a equipe da Imunisinos. Chame assim que o visitante informar um telefone/WhatsApp, mesmo que ainda faltem nome, cidade ou serviço. Se algum campo não tiver sido informado, use \"Não informado\". Chame de novo só se, depois de um envio parcial, você conseguir nome e serviço que ainda não tinha.",
+    "Registra o lead para a equipe da Imunisinos. Chame assim que houver telefone/WhatsApp, mesmo que ainda faltem nome, cidade ou serviço (use \"Não informado\"). No campo mensagem, escreva um briefing para o comercial ligar com contexto: o que a pessoa precisa, o que foi conversado, recados. Quando depois você tiver nome E serviço, chame de novo obrigatoriamente com os dados completos e um briefing mais rico. Sem esse segundo envio, o comercial só vê nome e telefone e perde a conversa.",
   input_schema: {
     type: "object",
     properties: {
@@ -27,7 +27,7 @@ export const ENVIAR_LEAD_TOOL: Anthropic.Tool = {
       mensagem: {
         type: "string",
         description:
-          "Resumo da dúvida, pedido ou contexto adicional relatado pelo visitante durante a conversa",
+          "Briefing para o comercial ligar: problema ou serviço, o que a pessoa já explicou no chat, cidade se houver, e qualquer recado útil. Não deixe vazio se já houver conversa.",
       },
     },
     required: ["telefone"],

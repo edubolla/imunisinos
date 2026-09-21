@@ -1,4 +1,4 @@
-export type ImuniAnalyticsEvent = "imuni_start" | "imuni_lead";
+export type ImuniAnalyticsEvent = "imuni_start" | "imuni_lead" | "imuni_lead_completo";
 
 type DataLayerWindow = Window & {
   dataLayer?: Array<Record<string, unknown>>;

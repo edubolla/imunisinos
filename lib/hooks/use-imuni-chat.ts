@@ -9,6 +9,7 @@ export type ChatMessage = {
   role: "user" | "assistant";
   content: string;
   whatsappUrl?: string;
+  leadCompleto?: boolean;
 };
 
 export type QuickReply = {
@@ -103,9 +104,12 @@ export function useImuniChat() {
       trackImuniEvent("imuni_start");
     }
 
+    const alreadySentLead = nextMessages.some((message) => Boolean(message.whatsappUrl));
+    const alreadySentComplete = nextMessages.some((message) => message.leadCompleto === true);
     const body = JSON.stringify({
       messages: nextMessages.map(({ role, content }) => ({ role, content })),
-      leadEnviado: nextMessages.some((message) => Boolean(message.whatsappUrl)),
+      leadEnviado: alreadySentLead,
+      leadCompleto: alreadySentComplete,
     });
 
     try {
@@ -121,13 +125,22 @@ export function useImuniChat() {
         throw new Error("Falha ao obter resposta da Imuni");
       }
 
-      const data: { content: string; leadWhatsappUrl?: string } = await response.json();
-      if (data.leadWhatsappUrl) {
+      const data: { content: string; leadWhatsappUrl?: string; leadCompleto?: boolean } =
+        await response.json();
+      if (data.leadWhatsappUrl && !alreadySentLead) {
         trackImuniEvent("imuni_lead");
+      }
+      if (data.leadCompleto && !alreadySentComplete) {
+        trackImuniEvent("imuni_lead_completo");
       }
       setMessages((current) => [
         ...current,
-        { role: "assistant", content: data.content, whatsappUrl: data.leadWhatsappUrl },
+        {
+          role: "assistant",
+          content: data.content,
+          whatsappUrl: data.leadWhatsappUrl,
+          leadCompleto: data.leadCompleto === true,
+        },
       ]);
     } catch {
       setMessages((current) => [
